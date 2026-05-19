@@ -1,0 +1,1400 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #173224;
+  background: #f5f7ed;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(132, 204, 22, 0.2), transparent 34rem),
+    linear-gradient(135deg, #f9fbf3 0%, #e8f1df 100%);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 64px;
+}
+
+.loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: #44624d;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 32px;
+  padding: clamp(32px, 7vw, 72px);
+  background:
+    var(--hero-weather-glow, radial-gradient(circle at 78% 18%, rgba(220, 252, 180, 0.18), transparent 22rem)),
+    var(--hero-weather-background, linear-gradient(135deg, rgba(21, 83, 45, 0.95), rgba(69, 128, 53, 0.9)));
+  color: #f8ffe9;
+  box-shadow: 0 24px 80px var(--hero-weather-shadow, rgba(35, 80, 43, 0.18));
+}
+
+.hero-weather-cloudy {
+  --hero-weather-background: linear-gradient(135deg, #3f5f73 0%, #7191a0 48%, #8fb2b8 100%);
+  --hero-weather-glow: radial-gradient(circle at 76% 20%, rgba(226, 232, 240, 0.28), transparent 24rem);
+  --hero-weather-shadow: rgba(51, 83, 101, 0.24);
+}
+
+.hero-weather-overcast {
+  --hero-weather-background: linear-gradient(135deg, #405161 0%, #6b7c85 54%, #9aa5a7 100%);
+  --hero-weather-glow: radial-gradient(circle at 72% 18%, rgba(241, 245, 249, 0.2), transparent 22rem);
+  --hero-weather-shadow: rgba(51, 65, 85, 0.24);
+}
+
+.hero-weather-sunny {
+  --hero-weather-background: linear-gradient(135deg, #15614a 0%, #65a338 45%, #f5b942 100%);
+  --hero-weather-glow: radial-gradient(circle at 76% 18%, rgba(254, 240, 138, 0.48), transparent 23rem);
+  --hero-weather-shadow: rgba(159, 96, 19, 0.22);
+}
+
+.hero-weather-rainy {
+  --hero-weather-background: linear-gradient(135deg, #17385f 0%, #28627e 52%, #4d8da0 100%);
+  --hero-weather-glow: radial-gradient(circle at 76% 18%, rgba(125, 211, 252, 0.28), transparent 22rem);
+  --hero-weather-shadow: rgba(30, 64, 175, 0.26);
+}
+
+.hero-weather-sun-shower {
+  --hero-weather-background: linear-gradient(135deg, #1b6a58 0%, #4f9d78 42%, #6db7c8 68%, #f3bd4d 100%);
+  --hero-weather-glow: radial-gradient(circle at 76% 18%, rgba(253, 224, 71, 0.34), transparent 22rem);
+  --hero-weather-shadow: rgba(14, 116, 144, 0.24);
+}
+
+.hero-weather-windy {
+  --hero-weather-background: linear-gradient(135deg, #315545 0%, #66896f 48%, #a3855c 100%);
+  --hero-weather-glow: radial-gradient(circle at 78% 20%, rgba(240, 253, 244, 0.24), transparent 22rem);
+  --hero-weather-shadow: rgba(87, 83, 78, 0.24);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  right: -72px;
+  bottom: -96px;
+  width: 320px;
+  height: 320px;
+  border-radius: 999px;
+  background: rgba(220, 252, 180, 0.18);
+}
+
+.hero > :not(.hero-weather-scene) {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-weather-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-scene-sun {
+  position: absolute;
+  top: clamp(24px, 5vw, 52px);
+  right: clamp(28px, 7vw, 92px);
+  width: clamp(120px, 18vw, 210px);
+  height: clamp(120px, 18vw, 210px);
+  border-radius: 999px;
+  background: #ffd86b;
+  box-shadow: 0 0 0 18px rgba(255, 216, 107, 0.16), 0 28px 90px rgba(251, 191, 36, 0.3);
+}
+
+.hero-scene-sun span {
+  position: absolute;
+  inset: 18%;
+  border-radius: inherit;
+  background: rgba(255, 244, 184, 0.72);
+}
+
+.hero-scene-cloud {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(241, 245, 249, 0.24);
+  box-shadow: 0 18px 56px rgba(15, 23, 42, 0.08);
+}
+
+.hero-scene-cloud::before,
+.hero-scene-cloud::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.hero-scene-cloud-one {
+  top: 56px;
+  right: 56px;
+  width: 238px;
+  height: 72px;
+}
+
+.hero-scene-cloud-one::before {
+  left: 46px;
+  bottom: 30px;
+  width: 72px;
+  height: 72px;
+}
+
+.hero-scene-cloud-one::after {
+  right: 48px;
+  bottom: 24px;
+  width: 92px;
+  height: 92px;
+}
+
+.hero-scene-cloud-two {
+  right: 226px;
+  bottom: 54px;
+  width: 168px;
+  height: 50px;
+  opacity: 0.55;
+}
+
+.hero-scene-cloud-two::before {
+  left: 34px;
+  bottom: 22px;
+  width: 48px;
+  height: 48px;
+}
+
+.hero-scene-cloud-two::after {
+  right: 34px;
+  bottom: 18px;
+  width: 62px;
+  height: 62px;
+}
+
+.hero-scene-rain {
+  position: absolute;
+  top: 22px;
+  right: clamp(20px, 9vw, 130px);
+  width: min(420px, 48vw);
+  height: 86%;
+  transform: skewX(-12deg);
+}
+
+.hero-scene-rain i {
+  position: absolute;
+  top: var(--rain-top, 18%);
+  left: var(--rain-left, 20%);
+  width: 4px;
+  height: var(--rain-height, 48px);
+  border-radius: 999px;
+  background: linear-gradient(to bottom, rgba(224, 242, 254, 0.1), rgba(125, 211, 252, 0.72));
+  box-shadow: 0 0 18px rgba(125, 211, 252, 0.18);
+}
+
+.hero-scene-rain i:nth-child(1) { --rain-left: 4%; --rain-top: 12%; --rain-height: 42px; }
+.hero-scene-rain i:nth-child(2) { --rain-left: 12%; --rain-top: 36%; --rain-height: 62px; }
+.hero-scene-rain i:nth-child(3) { --rain-left: 20%; --rain-top: 20%; --rain-height: 52px; }
+.hero-scene-rain i:nth-child(4) { --rain-left: 28%; --rain-top: 50%; --rain-height: 44px; }
+.hero-scene-rain i:nth-child(5) { --rain-left: 36%; --rain-top: 8%; --rain-height: 66px; }
+.hero-scene-rain i:nth-child(6) { --rain-left: 44%; --rain-top: 32%; --rain-height: 50px; }
+.hero-scene-rain i:nth-child(7) { --rain-left: 52%; --rain-top: 62%; --rain-height: 54px; }
+.hero-scene-rain i:nth-child(8) { --rain-left: 60%; --rain-top: 18%; --rain-height: 46px; }
+.hero-scene-rain i:nth-child(9) { --rain-left: 68%; --rain-top: 42%; --rain-height: 64px; }
+.hero-scene-rain i:nth-child(10) { --rain-left: 76%; --rain-top: 26%; --rain-height: 50px; }
+.hero-scene-rain i:nth-child(11) { --rain-left: 84%; --rain-top: 58%; --rain-height: 40px; }
+.hero-scene-rain i:nth-child(12) { --rain-left: 92%; --rain-top: 14%; --rain-height: 58px; }
+.hero-scene-rain i:nth-child(13) { --rain-left: 48%; --rain-top: 6%; --rain-height: 38px; }
+.hero-scene-rain i:nth-child(14) { --rain-left: 8%; --rain-top: 68%; --rain-height: 52px; }
+
+.hero-scene-wind {
+  position: absolute;
+  right: clamp(28px, 8vw, 120px);
+  width: clamp(180px, 32vw, 420px);
+  height: 26px;
+  border-top: 4px solid rgba(240, 253, 244, 0.42);
+  border-radius: 999px;
+}
+
+.hero-scene-wind::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  top: -17px;
+  width: 34px;
+  height: 26px;
+  border-top: 4px solid rgba(240, 253, 244, 0.42);
+  border-right: 4px solid rgba(240, 253, 244, 0.42);
+  border-radius: 999px;
+}
+
+.hero-scene-wind-one { top: 84px; }
+.hero-scene-wind-two { top: 142px; right: clamp(82px, 18vw, 260px); width: clamp(140px, 24vw, 300px); opacity: 0.7; }
+.hero-scene-wind-three { bottom: 72px; width: clamp(130px, 22vw, 280px); opacity: 0.58; }
+
+.hero-scene-leaf {
+  position: absolute;
+  width: 34px;
+  height: 20px;
+  border-radius: 100% 0 100% 0;
+  background: #d9a441;
+  box-shadow: inset 0 -2px 0 rgba(120, 53, 15, 0.18);
+  transform: rotate(var(--leaf-rotate, -24deg));
+}
+
+.hero-scene-leaf-one { top: 108px; right: 260px; --leaf-rotate: -22deg; }
+.hero-scene-leaf-two { top: 178px; right: 120px; width: 28px; height: 17px; --leaf-rotate: 34deg; background: #b8cc5a; }
+.hero-scene-leaf-three { bottom: 76px; right: 330px; width: 24px; height: 15px; --leaf-rotate: 12deg; background: #f0b35a; }
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: #6c8b3f;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero .eyebrow {
+  color: #cfeeb3;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 16px;
+  font-size: clamp(3rem, 12vw, 7.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.08em;
+}
+
+.intro {
+  max-width: 620px;
+  margin-bottom: 28px;
+  color: #eff8dd;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+}
+
+.hero-facts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid rgba(248, 255, 233, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.hero-facts span,
+.hero-facts strong {
+  padding: 8px 14px;
+}
+
+.hero-facts strong {
+  border-radius: 999px;
+  background: #f7ffc9;
+  color: #2f5c1f;
+}
+
+.hero-facts .hero-temperature {
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f3f27;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34);
+}
+
+.hero-temp-cold .hero-temperature {
+  background: #dff5ff;
+  color: #1e3a5f;
+}
+
+.hero-temp-suitable .hero-temperature {
+  background: #dcfce7;
+  color: #285126;
+}
+
+.hero-temp-hot .hero-temperature {
+  background: #ffedd5;
+  color: #7c2d12;
+}
+
+.hero-temp-very-hot .hero-temperature {
+  background: #fee2e2;
+  color: #7f1d1d;
+}
+
+.recommendations {
+  margin-top: 42px;
+}
+
+.section-heading {
+  margin-bottom: 18px;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  letter-spacing: -0.05em;
+}
+
+.difficulty-guide {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  border: 1px solid rgba(91, 119, 75, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 12px 32px rgba(46, 82, 38, 0.08);
+}
+
+.difficulty-guide strong {
+  color: #315327;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.difficulty-guide-list {
+  display: grid;
+  gap: 10px;
+}
+
+.difficulty-guide-item {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 10px;
+  align-items: center;
+  color: #496451;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.plant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.plant-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100%;
+  padding: 22px;
+  border: 1px solid rgba(91, 119, 75, 0.14);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 16px 44px rgba(46, 82, 38, 0.1);
+}
+
+.card-topline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.category,
+.difficulty {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.category {
+  background: #e9f5d3;
+  color: #456416;
+}
+
+.difficulty {
+  background: #edf5ee;
+  color: #47614d;
+}
+
+.plant-icon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #f5fbde, #e3f0d4);
+  box-shadow:
+    inset 0 0 0 1px rgba(91, 119, 75, 0.12),
+    0 10px 24px rgba(46, 82, 38, 0.08);
+}
+
+.plant-icon svg {
+  width: 42px;
+  height: 42px;
+}
+
+.plant-icon-bg {
+  fill: rgba(255, 255, 255, 0.34);
+}
+
+.plant-stem,
+.plant-vein,
+.bulb-line,
+.lettuce-line,
+.tomato-shine {
+  fill: none;
+  stroke: #3f7335;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.plant-leaf,
+.kale-leaf,
+.lettuce-head {
+  fill: #79b857;
+  stroke: #477c36;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.plant-leaf-light {
+  fill: #9ccc65;
+}
+
+.plant-leaf-dark,
+.kale-leaf {
+  fill: #5f9a46;
+}
+
+.bean {
+  fill: #79a84e;
+  stroke: #4f7b35;
+  stroke-width: 2;
+}
+
+.bean-light {
+  fill: #a5c85a;
+}
+
+.bulb {
+  fill: #f4efd6;
+  stroke: #9e8d5d;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.parsley-lobe {
+  fill: #67a84b;
+  stroke: #3f7335;
+  stroke-width: 2;
+}
+
+.parsley-light {
+  fill: #8fbf55;
+}
+
+.lettuce-head {
+  fill: #a8cf62;
+}
+
+.tomato {
+  fill: #e95c45;
+  stroke: #b33a2c;
+  stroke-width: 2;
+}
+
+.tomato-top {
+  fill: #4f8f3b;
+  stroke: #397032;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.tomato-shine {
+  stroke: rgba(255, 244, 210, 0.82);
+  stroke-width: 3.5;
+}
+
+.plant-icon-pod,
+.plant-icon-leaf,
+.plant-icon-leaf-dark,
+.plant-icon-herb,
+.plant-icon-lettuce {
+  stroke-linejoin: round;
+}
+
+.plant-icon-pod {
+  fill: #77a84b;
+  stroke: #4f7b35;
+  stroke-width: 2;
+}
+
+.plant-icon-seed {
+  fill: #d8f0a6;
+}
+
+.plant-icon-leaf {
+  fill: #7fbf5b;
+  stroke: #4d843a;
+  stroke-width: 2;
+}
+
+.plant-icon-leaf-dark {
+  fill: #5f9a46;
+  stroke: #3f7335;
+  stroke-width: 2;
+}
+
+.plant-icon-vein,
+.plant-icon-stem,
+.plant-icon-clove,
+.plant-icon-shoot,
+.plant-icon-ruffle {
+  fill: none;
+  stroke: #3f7335;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.plant-icon-bulb {
+  fill: #f4efd6;
+  stroke: #9e8d5d;
+  stroke-width: 2;
+}
+
+.plant-icon-herb {
+  fill: #67a84b;
+  stroke: #3f7335;
+  stroke-width: 2;
+}
+
+.plant-icon-lettuce {
+  fill: #a8cf62;
+  stroke: #5f8f3f;
+  stroke-width: 2;
+}
+
+.plant-icon-fruit {
+  fill: #e95c45;
+  stroke: #b33a2c;
+  stroke-width: 2;
+}
+
+.plant-icon-calyx {
+  fill: #4f8f3b;
+  stroke: #397032;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.plant-icon-tomato {
+  background: linear-gradient(145deg, #fff0d7, #f5e3d4);
+}
+
+.plant-icon-broad-beans,
+.plant-icon-garlic {
+  background: linear-gradient(145deg, #fffbea, #e7f1d6);
+}
+
+.plant-icon-beans,
+.plant-icon-broad-beans,
+.plant-icon-spinach,
+.plant-icon-kale,
+.plant-icon-parsley,
+.plant-icon-lettuce,
+.plant-icon-default,
+.plant-icon-seedling {
+  background: linear-gradient(145deg, #f5fbde, #dcefd2);
+}
+
+.plant-icon-bg {
+  fill: rgba(255, 255, 255, 0.24);
+}
+
+.plant-stem,
+.bulb-line,
+.plant-vein,
+.lettuce-line,
+.tomato-shine {
+  fill: none;
+  stroke: #3f7335;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tomato-shine {
+  stroke: rgba(255, 244, 202, 0.82);
+  stroke-width: 4;
+}
+
+.plant-leaf,
+.kale-leaf,
+.lettuce-head,
+.parsley-lobe {
+  fill: #7fbf5b;
+  stroke: #4d843a;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.plant-leaf-light,
+.parsley-light {
+  fill: #9dcc61;
+}
+
+.plant-leaf-dark,
+.kale-leaf {
+  fill: #5f9a46;
+}
+
+.bean {
+  fill: #77a84b;
+  stroke: #4f7b35;
+  stroke-width: 2;
+}
+
+.bean-light {
+  fill: #9dcc61;
+}
+
+.bulb {
+  fill: #f4efd6;
+  stroke: #9e8d5d;
+  stroke-width: 2;
+}
+
+.lettuce-head {
+  fill: #a8cf62;
+}
+
+.tomato {
+  fill: #e95c45;
+  stroke: #b33a2c;
+  stroke-width: 2;
+}
+
+.tomato-top {
+  fill: #4f8f3b;
+  stroke: #397032;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+/* Recognizable plant-card icon set: explicit crop silhouettes within a 64x64 viewBox. */
+.plant-icon svg {
+  width: 46px;
+  height: 46px;
+}
+
+.plant-icon-bg {
+  fill: rgba(255, 255, 255, 0.28);
+}
+
+.plant-icon-tomato {
+  background: linear-gradient(145deg, #fff0d7, #f5e3d4);
+}
+
+.plant-icon-broad-beans,
+.plant-icon-garlic {
+  background: linear-gradient(145deg, #fffbea, #e7f1d6);
+}
+
+.plant-icon-spinach,
+.plant-icon-kale,
+.plant-icon-parsley,
+.plant-icon-lettuce,
+.plant-icon-silverbeet,
+.plant-icon-coriander,
+.plant-icon-kawakawa,
+.plant-icon-default {
+  background: linear-gradient(145deg, #f5fbde, #dcefd2);
+}
+
+.plant-stem,
+.plant-vein,
+.bean-pod-seam,
+.garlic-shoot,
+.garlic-clove,
+.garlic-root,
+.kale-ruffle,
+.lettuce-core,
+.tomato-shine,
+.silverbeet-stem,
+.silverbeet-side-vein,
+.parsley-stems,
+.parsley-cut,
+.coriander-stems,
+.coriander-cut,
+.kawakawa-stem,
+.kawakawa-vein {
+  fill: none;
+  stroke: #3f7335;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.plant-leaf,
+.spinach-leaf,
+.kale-leaf,
+.lettuce-head,
+.lettuce-inner,
+.parsley-leaf,
+.coriander-leaf,
+.silverbeet-leaf,
+.kawakawa-leaf,
+.bean-pod {
+  stroke-linejoin: round;
+}
+
+.bean-pod {
+  fill: #79a84e;
+  stroke: #4f7b35;
+  stroke-width: 2.2;
+}
+
+.broad-bean-seed {
+  fill: #d7ef95;
+  stroke: #4f7b35;
+  stroke-width: 1.8;
+}
+
+.broad-bean-seed-light {
+  fill: #edf7bc;
+}
+
+.spinach-leaf {
+  fill: #76b653;
+  stroke: #477c36;
+  stroke-width: 2;
+}
+
+.spinach-leaf-light {
+  fill: #93ca62;
+}
+
+.spinach-leaf-dark {
+  fill: #5f9a46;
+}
+
+.spinach-vein,
+.kale-vein,
+.kawakawa-vein {
+  stroke-width: 2.2;
+  opacity: 0.84;
+}
+
+.garlic-bulb {
+  fill: #f7f1dc;
+  stroke: #9e8d5d;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+
+.garlic-clove {
+  stroke: #b8a76f;
+  stroke-width: 2.4;
+}
+
+.garlic-shoot {
+  stroke: #5b8f3f;
+  stroke-width: 2.8;
+}
+
+.garlic-root {
+  stroke: #9e8d5d;
+  stroke-width: 2;
+}
+
+.kale-leaf {
+  fill: #5f9a46;
+  stroke: #3f7335;
+  stroke-width: 2;
+}
+
+.kale-ruffle {
+  stroke: rgba(248, 255, 233, 0.62);
+  stroke-width: 2.5;
+}
+
+.lettuce-head {
+  fill: #a8cf62;
+  stroke: #5f8f3f;
+  stroke-width: 2;
+}
+
+.lettuce-inner {
+  fill: #bedd73;
+  stroke: #6e9f46;
+  stroke-width: 1.7;
+}
+
+.lettuce-inner-dark {
+  fill: #8fbd52;
+}
+
+.lettuce-core {
+  stroke: #5f8f3f;
+  stroke-width: 2.2;
+}
+
+.tomato {
+  fill: #e95c45;
+  stroke: #b33a2c;
+  stroke-width: 2;
+}
+
+.tomato-small {
+  fill: #f06b4f;
+}
+
+.tomato-top {
+  fill: #4f8f3b;
+  stroke: #397032;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.tomato-shine {
+  stroke: rgba(255, 244, 202, 0.82);
+  stroke-width: 3.6;
+}
+
+.silverbeet-leaf {
+  fill: #6faf50;
+  stroke: #3f7335;
+  stroke-width: 2;
+}
+
+.silverbeet-leaf-light {
+  fill: #83bf5a;
+}
+
+.silverbeet-stem,
+.silverbeet-side-vein {
+  stroke: #f0b73b;
+  stroke-width: 3.6;
+}
+
+.silverbeet-side-vein {
+  stroke-width: 2.2;
+}
+
+.parsley-leaf {
+  fill: #67a84b;
+  stroke: #3f7335;
+  stroke-width: 2;
+}
+
+.parsley-right {
+  fill: #7fba55;
+}
+
+.parsley-cut {
+  stroke: rgba(248, 255, 233, 0.88);
+  stroke-width: 2;
+}
+
+.coriander-leaf {
+  fill: #81bd5a;
+  stroke: #477c36;
+  stroke-width: 1.8;
+}
+
+.coriander-light {
+  fill: #9cca62;
+}
+
+.coriander-cut {
+  stroke: rgba(38, 86, 38, 0.7);
+  stroke-width: 1.8;
+}
+
+.kawakawa-leaf {
+  fill: #72ad51;
+  stroke: #3f7335;
+  stroke-width: 2.2;
+}
+
+.kawakawa-dot {
+  fill: #e6f0b9;
+  stroke: #3f7335;
+  stroke-width: 0.8;
+}
+
+.difficulty-easy {
+  background: #e5f7d4;
+  color: #38651d;
+}
+
+.difficulty-medium,
+.difficulty-moderate {
+  background: #fff2cc;
+  color: #835a00;
+}
+
+.difficulty-hard,
+.difficulty-advanced {
+  background: #ffe0d4;
+  color: #923b1a;
+}
+
+.star-rating {
+  display: inline-flex;
+  gap: 2px;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.star {
+  color: #cbd5bd;
+}
+
+.star-filled {
+  color: #f4a825;
+  text-shadow: 0 1px 0 rgba(93, 72, 13, 0.12);
+}
+
+.difficulty-value {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 7px 10px;
+}
+
+h3 {
+  margin-bottom: 0;
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+}
+
+dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+dt {
+  color: #6d8069;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+dd {
+  margin: 3px 0 0;
+  color: #213d2b;
+}
+
+.sun-visual {
+  margin-top: 6px;
+}
+
+.water-visual {
+  margin-top: 6px;
+}
+
+.water-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, #eaf7ec, #e0f2f7);
+  box-shadow: inset 0 0 0 1px rgba(91, 119, 75, 0.12);
+}
+
+.water-drop {
+  width: 18px;
+  height: 18px;
+  fill: #cbd9d2;
+  filter: drop-shadow(0 1px 0 rgba(23, 50, 36, 0.1));
+}
+
+.water-drop-filled {
+  fill: #56a9c7;
+}
+
+.water-drop-shine {
+  fill: none;
+  stroke: rgba(248, 255, 233, 0.78);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.water-rating-1,
+.water-rating-2 {
+  background: linear-gradient(145deg, #eef7df, #e8f1df);
+}
+
+.water-rating-4,
+.water-rating-5 {
+  background: linear-gradient(145deg, #e6f7f4, #d8edf7);
+}
+
+.water-rating-4 .water-drop-filled,
+.water-rating-5 .water-drop-filled {
+  fill: #3f9fc2;
+}
+
+.sun-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #fff7d6, #eef7df);
+  box-shadow: inset 0 0 0 1px rgba(91, 119, 75, 0.12);
+}
+
+.sun-icon svg {
+  width: 38px;
+  height: 38px;
+}
+
+.sun-core {
+  fill: #f7b733;
+}
+
+.sun-rays {
+  fill: none;
+  stroke: #f0a51a;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.shade-cloud {
+  fill: #9fb7a3;
+  stroke: #6f8d75;
+  stroke-width: 2;
+}
+
+.shade-leaf {
+  fill: #5f8f4e;
+}
+
+.sun-icon-full-sun {
+  background: linear-gradient(145deg, #fff0b8, #fff9dc);
+}
+
+.sun-icon-part-shade {
+  background: linear-gradient(145deg, #fff4c8, #e8f1df);
+}
+
+.sun-icon-shade {
+  background: linear-gradient(145deg, #e8f1df, #d7e8d3);
+}
+
+.plant-card p {
+  margin-bottom: 0;
+  color: #4a6352;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    width: min(100% - 24px, 1120px);
+    padding: 20px 0 36px;
+  }
+
+  .hero {
+    border-radius: 24px;
+  }
+
+  .hero-facts {
+    width: 100%;
+    border-radius: 22px;
+  }
+
+  .hero-facts span,
+  .hero-facts strong {
+    width: 100%;
+    text-align: center;
+  }
+
+  .plant-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 18px;
+  }
+
+  .plant-icon svg {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+.silverbeet-leaf {
+  fill: #4f9a58;
+  stroke: #356f3a;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.silverbeet-leaf-light {
+  fill: #74b85b;
+}
+
+.silverbeet-stem,
+.kawakawa-stem {
+  stroke: #f2d06b;
+}
+
+.coriander-lobe {
+  fill: #66ad4d;
+  stroke: #3f7335;
+  stroke-width: 1.8;
+}
+
+.coriander-light {
+  fill: #91c85a;
+}
+
+.coriander-cut {
+  fill: none;
+  stroke: #3f7335;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.kawakawa-leaf {
+  fill: #5d9f4a;
+  stroke: #346f39;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.kawakawa-dot {
+  fill: #d9ec9c;
+}
+
+.plant-icon-silverbeet {
+  background: linear-gradient(145deg, #eff9da, #d7ecd3);
+}
+
+.plant-icon-coriander {
+  background: linear-gradient(145deg, #f4fbde, #d9efd0);
+}
+
+.plant-icon-kawakawa {
+  background: linear-gradient(145deg, #eef7da, #d0e6c7);
+}
+
+/* Recognizable plant icon set: high-contrast, literal silhouettes for 58px card tiles. */
+.plant-icon svg {
+  width: 48px;
+  height: 48px;
+}
+
+.pod-shell,
+.spinach-leaf,
+.kale-head,
+.parsley-sprig,
+.coriander-sprig,
+.lettuce-outer,
+.seedling-leaf,
+.chard-leaf,
+.kawakawa-leaf {
+  stroke-linejoin: round;
+}
+
+.pod-shell {
+  fill: #78ad45;
+  stroke: #416f2d;
+  stroke-width: 2.5;
+}
+
+.pod-seam,
+.herb-cut,
+.lettuce-rim,
+.kale-ribs,
+.kale-stem,
+.chard-rib,
+.kawakawa-stem,
+.kawakawa-vein,
+.garlic-shoot,
+.garlic-clove,
+.garlic-root,
+.herb-stem {
+  fill: none;
+  stroke: #356c32;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.seed-detail {
+  fill: #d5ed92;
+  stroke: #4f7b35;
+  stroke-width: 1.6;
+}
+
+.spinach-leaf {
+  fill: #78b95a;
+  stroke: #39743a;
+  stroke-width: 2.2;
+}
+
+.spinach-leaf-light {
+  fill: #92c964;
+}
+
+.spinach-leaf-dark {
+  fill: #4f964d;
+}
+
+.garlic-bulb {
+  fill: #f6f0d5;
+  stroke: #9a8b5a;
+  stroke-width: 2.3;
+  stroke-linejoin: round;
+}
+
+.garlic-shoot {
+  stroke: #4f8f3b;
+}
+
+.garlic-clove,
+.garlic-root {
+  stroke: #9a8b5a;
+  stroke-width: 2.2;
+}
+
+.kale-head {
+  fill: #5e9f49;
+  stroke: #326f36;
+  stroke-width: 2.3;
+}
+
+.kale-ribs,
+.kale-stem {
+  stroke: #d7e68f;
+  stroke-width: 2.4;
+}
+
+.parsley-sprig {
+  fill: #73b44f;
+  stroke: #386f35;
+  stroke-width: 2.2;
+}
+
+.coriander-sprig {
+  fill: #86bf57;
+  stroke: #39723a;
+  stroke-width: 2.1;
+}
+
+.herb-cut {
+  stroke: #386f35;
+  stroke-width: 2;
+}
+
+.lettuce-outer {
+  fill: #a9cf62;
+  stroke: #5d8a3d;
+  stroke-width: 2.3;
+}
+
+.lettuce-inner,
+.lettuce-rim {
+  fill: none;
+  stroke: #5d8a3d;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tomato-fruit {
+  fill: #e95c45;
+  stroke: #b33a2c;
+  stroke-width: 2.4;
+}
+
+.tomato-calyx {
+  fill: #4f8f3b;
+  stroke: #397032;
+  stroke-width: 1.7;
+  stroke-linejoin: round;
+}
+
+.chard-leaf {
+  fill: #4f9a58;
+  stroke: #356f3a;
+  stroke-width: 2.2;
+}
+
+.chard-right {
+  fill: #73b95d;
+}
+
+.chard-rib {
+  stroke: #f2d06b;
+  stroke-width: 4;
+}
+
+.seedling-leaf {
+  fill: #74b85b;
+  stroke: #3f7335;
+  stroke-width: 2.2;
+}
+
+.seedling-leaf-light {
+  fill: #9ccc65;
+}
+
+.kawakawa-vein {
+  stroke: #d8ebb0;
+  stroke-width: 2.2;
+}
+
+.plant-icon-tomato {
+  background: linear-gradient(145deg, #fff0d7, #f6dfd2);
+}
+
+.plant-icon-garlic,
+.plant-icon-broad-beans {
+  background: linear-gradient(145deg, #fffbea, #e7f1d6);
+}
+
+.plant-icon-silverbeet {
+  background: linear-gradient(145deg, #eff9da, #d7ecd3);
+}
+
+.plant-icon-kawakawa {
+  background: linear-gradient(145deg, #eef7da, #d0e6c7);
+}
+
+@media (max-width: 640px) {
+  .plant-icon svg {
+    width: 44px;
+    height: 44px;
+  }
+}
