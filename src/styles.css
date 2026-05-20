@@ -356,6 +356,17 @@ h1 {
   margin-top: 42px;
 }
 
+.recommendations-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(210px, 260px);
+  gap: 22px;
+  align-items: start;
+}
+
+.recommendations-main {
+  min-width: 0;
+}
+
 .section-heading {
   margin-bottom: 18px;
 }
@@ -367,36 +378,42 @@ h2 {
 }
 
 .difficulty-guide {
+  position: sticky;
+  top: 18px;
   display: grid;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding: 16px 18px;
+  gap: 10px;
+  margin-top: 84px;
+  padding: 14px;
   border: 1px solid rgba(91, 119, 75, 0.14);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.68);
-  box-shadow: 0 12px 32px rgba(46, 82, 38, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: 0 12px 28px rgba(46, 82, 38, 0.07);
 }
 
 .difficulty-guide strong {
   color: #315327;
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .difficulty-guide-list {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .difficulty-guide-item {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   color: #496451;
-  font-size: 0.9rem;
-  line-height: 1.45;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.difficulty-guide .star-rating {
+  font-size: 0.74rem;
 }
 
 .plant-grid {
@@ -1124,6 +1141,17 @@ dd {
   margin-bottom: 0;
   color: #4a6352;
   line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .recommendations-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .difficulty-guide {
+    position: static;
+    margin-top: 0;
+  }
 }
 
 @media (max-width: 640px) {

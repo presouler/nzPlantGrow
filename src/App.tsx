@@ -34,11 +34,11 @@ const difficultyMeta = {
 };
 
 const difficultyGuide = [
-  { stars: 1, text: 'Beginner friendly; good for first-time growers.' },
-  { stars: 2, text: 'Fairly easy; needs occasional checks.' },
-  { stars: 3, text: 'Moderate; needs steady watering and basic care.' },
-  { stars: 4, text: 'Challenging; check conditions, pests, or support more often.' },
-  { stars: 5, text: 'Advanced; best with gardening experience or a protected growing space.' },
+  { stars: 1, text: 'Beginner friendly' },
+  { stars: 2, text: 'Easy, occasional checks' },
+  { stars: 3, text: 'Moderate regular care' },
+  { stars: 4, text: 'Challenging conditions' },
+  { stars: 5, text: 'Advanced growers' },
 ];
 
 const seasonWeatherFallback: Record<string, HeroWeather> = {
@@ -192,7 +192,7 @@ function WaterDropRating({ watering }: { watering: string }) {
 function DifficultyGuide() {
   return (
     <aside className="difficulty-guide" aria-label="Planting difficulty guide">
-      <strong>Planting difficulty guide</strong>
+      <strong>Difficulty guide</strong>
       <div className="difficulty-guide-list">
         {difficultyGuide.map((item) => (
           <div className="difficulty-guide-item" key={item.stars}>
@@ -299,48 +299,52 @@ function App() {
       </section>
 
       <section className="recommendations" aria-labelledby="recommendations-title">
-        <div className="section-heading">
-          <p className="eyebrow">Plant now</p>
-          <h2 id="recommendations-title">Recommended for {data.season.toLowerCase()}</h2>
-        </div>
+        <div className="recommendations-layout">
+          <div className="recommendations-main">
+            <div className="section-heading">
+              <p className="eyebrow">Plant now</p>
+              <h2 id="recommendations-title">Recommended for {data.season.toLowerCase()}</h2>
+            </div>
 
-        <DifficultyGuide />
+            <div className="plant-grid">
+              {data.recommendations.map((plant) => {
+                const difficulty = getDifficultyMeta(plant.difficulty);
 
-        <div className="plant-grid">
-          {data.recommendations.map((plant) => {
-            const difficulty = getDifficultyMeta(plant.difficulty);
+                return (
+                  <article className="plant-card" key={plant.id}>
+                    <div className="card-topline">
+                      <span className="category">{plant.category}</span>
+                      <PlantIcon id={plant.id} icon={plant.icon} name={plant.name} />
+                    </div>
+                    <h3>{plant.name}</h3>
+                    <dl>
+                      <div>
+                        <dt>Planting difficulty</dt>
+                        <dd className={`difficulty-value difficulty-${difficulty.className}`} aria-label={difficulty.label}>
+                          <StarRating rating={difficulty.stars} />
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Suitable months</dt>
+                        <dd>{formatMonthRange(plant.suitableMonths)}</dd>
+                      </div>
+                      <div>
+                        <dt>Sun</dt>
+                        <dd className="sun-visual"><SunExposureIcon sun={plant.sun} /></dd>
+                      </div>
+                      <div>
+                        <dt>Watering</dt>
+                        <dd className="water-visual"><WaterDropRating watering={plant.watering} /></dd>
+                      </div>
+                    </dl>
+                    <p>{plant.notes}</p>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
 
-            return (
-              <article className="plant-card" key={plant.id}>
-                <div className="card-topline">
-                  <span className="category">{plant.category}</span>
-                  <PlantIcon id={plant.id} icon={plant.icon} name={plant.name} />
-                </div>
-                <h3>{plant.name}</h3>
-                <dl>
-                  <div>
-                    <dt>Planting difficulty</dt>
-                    <dd className={`difficulty-value difficulty-${difficulty.className}`} aria-label={difficulty.label}>
-                      <StarRating rating={difficulty.stars} />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Suitable months</dt>
-                    <dd>{formatMonthRange(plant.suitableMonths)}</dd>
-                  </div>
-                  <div>
-                    <dt>Sun</dt>
-                    <dd className="sun-visual"><SunExposureIcon sun={plant.sun} /></dd>
-                  </div>
-                  <div>
-                    <dt>Watering</dt>
-                    <dd className="water-visual"><WaterDropRating watering={plant.watering} /></dd>
-                  </div>
-                </dl>
-                <p>{plant.notes}</p>
-              </article>
-            );
-          })}
+          <DifficultyGuide />
         </div>
       </section>
     </main>

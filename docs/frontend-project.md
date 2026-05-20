@@ -338,7 +338,7 @@ Current implementation:
 User requirement:
 
 - Difficulty should be shown with 5 stars.
-- Show one shared vertical explanation for 1-star through 5-star difficulty.
+- Show one shared compact explanation for 1-star through 5-star difficulty as a right-side helper on desktop.
 - Plant card difficulty rows should show stars only to keep cards compact.
 
 Current mapping:
@@ -354,13 +354,15 @@ Current internal labels for accessibility:
 - `3/5 Medium / regular care needed`
 - `5/5 Hard / experienced gardeners`
 
-Current shared guide copy:
+Current shared guide layout/copy:
 
-- 1 star: Beginner friendly; good for first-time growers.
-- 2 stars: Fairly easy; needs occasional checks.
-- 3 stars: Moderate; needs steady watering and basic care.
-- 4 stars: Challenging; check conditions, pests, or support more often.
-- 5 stars: Advanced; best with gardening experience or a protected growing space.
+- Desktop: compact `Difficulty guide` aside on the right of the recommendation grid; sticky while scrolling.
+- Narrow screens: guide stacks with the recommendations content.
+- 1 star: Beginner friendly.
+- 2 stars: Easy, occasional checks.
+- 3 stars: Moderate regular care.
+- 4 stars: Challenging conditions.
+- 5 stars: Advanced growers.
 
 ## Validation Status
 
@@ -388,6 +390,7 @@ Both passed. Note: `pnpm run typecheck && pnpm run build` was blocked in this en
 - Changed difficulty UI to one shared 1-5 star explanation and simplified cards to show planting difficulty.
 - Fixed full sun icon alignment.
 - Reverted plant card difficulty rows to stars only and changed shared planting difficulty guide to a vertical list.
+- Moved the shared difficulty guide from a large full-width block into a compact right-side helper aside on desktop.
 - Added plant-name-specific inline SVG icons to recommendation cards without external image dependencies.
 - Refreshed Broad Bean(s), Spinach, Garlic, Kale, Parsley, Lettuce, Tomato, Silverbeet, Coriander, and Kawakawa icons for clearer crop recognition while keeping inline 64x64 SVGs and the existing garden theme.
 - Removed Chinese UI and mock-data copy for the initial English-only version.
