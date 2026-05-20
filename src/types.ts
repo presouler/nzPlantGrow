@@ -28,6 +28,18 @@ export type PlantRecommendation = {
   icon?: string;
 };
 
+export type PlantDetailSection = {
+  title: string;
+  body?: string;
+  items?: string[];
+};
+
+export type PlantDetail = PlantRecommendation & {
+  plantingWindowLabel?: string;
+  careTips?: string[];
+  detailSections?: PlantDetailSection[];
+};
+
 export type ApiPlantRecommendation = {
   id: string;
   name: string;
@@ -38,6 +50,12 @@ export type ApiPlantRecommendation = {
   difficulty: PlantDifficulty;
   notes: string;
   icon?: string;
+};
+
+export type ApiPlantDetail = ApiPlantRecommendation & {
+  plantingWindowLabel?: string;
+  careTips?: string[];
+  detailSections?: PlantDetailSection[];
 };
 
 export type CurrentRecommendationsResponse = {

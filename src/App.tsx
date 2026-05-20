@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { getCurrentRecommendations } from './api/recommendations';
+import { getCurrentRecommendations, getPlantDetail } from './api/recommendations';
 import { getAucklandWeather } from './api/weather';
 import { PlantIcon } from './components/PlantIcon';
-import type { AucklandWeatherResponse, CurrentRecommendationsResponse, HeroWeather, WeatherCondition } from './types';
+import type { AucklandWeatherResponse, CurrentRecommendationsResponse, HeroWeather, PlantDetail, PlantRecommendation, WeatherCondition } from './types';
 import { formatMonthRange } from './utils/season';
 
 const difficultyMeta = {
@@ -246,9 +246,166 @@ function SunExposureIcon({ sun }: { sun: string }) {
   );
 }
 
+
+type AppRoute =
+  | { name: 'home' }
+  | { name: 'plant-detail'; id: string };
+
+function getRouteFromLocation(): AppRoute {
+  const match = window.location.pathname.match(/^\/plants\/([^/]+)\/?$/);
+
+  if (!match) {
+    return { name: 'home' };
+  }
+
+  return { name: 'plant-detail', id: decodeURIComponent(match[1]) };
+}
+
+function plantDetailPath(id: string): string {
+  return `/plants/${encodeURIComponent(id)}`;
+}
+
+function PlantCardLink({ plant, onOpen }: { plant: PlantRecommendation; onOpen: (id: string) => void }) {
+  const difficulty = getDifficultyMeta(plant.difficulty);
+
+  return (
+    <a
+      className="plant-card plant-card-link"
+      href={plantDetailPath(plant.id)}
+      onClick={(event) => {
+        event.preventDefault();
+        onOpen(plant.id);
+      }}
+      aria-label={`View details for ${plant.name}`}
+    >
+      <article>
+        <div className="card-topline">
+          <span className="category">{plant.category}</span>
+          <PlantIcon id={plant.id} icon={plant.icon} name={plant.name} />
+        </div>
+        <h3>{plant.name}</h3>
+        <dl>
+          <div>
+            <dt>Planting difficulty</dt>
+            <dd className={`difficulty-value difficulty-${difficulty.className}`} aria-label={difficulty.label}>
+              <StarRating rating={difficulty.stars} />
+            </dd>
+          </div>
+          <div>
+            <dt>Suitable months</dt>
+            <dd>{formatMonthRange(plant.suitableMonths)}</dd>
+          </div>
+          <div>
+            <dt>Sun</dt>
+            <dd className="sun-visual"><SunExposureIcon sun={plant.sun} /></dd>
+          </div>
+          <div>
+            <dt>Watering</dt>
+            <dd className="water-visual"><WaterDropRating watering={plant.watering} /></dd>
+          </div>
+        </dl>
+        <p>{plant.notes}</p>
+        <span className="plant-card-cta">View details →</span>
+      </article>
+    </a>
+  );
+}
+
+function PlantDetailPage({ plant, isLoading, onBack }: { plant: PlantDetail | null; isLoading: boolean; onBack: () => void }) {
+  if (isLoading && !plant) {
+    return <main className="app-shell loading">Loading plant details…</main>;
+  }
+
+  if (!plant) {
+    return (
+      <main className="app-shell loading">
+        <button className="back-link" type="button" onClick={onBack}>← Back to recommendations</button>
+        Plant details are not available yet.
+      </main>
+    );
+  }
+
+  const difficulty = getDifficultyMeta(plant.difficulty);
+  const careTips = plant.careTips?.filter(Boolean) ?? [];
+  const detailSections = plant.detailSections?.filter((section) => section.title || section.body || section.items?.length) ?? [];
+
+  return (
+    <main className="app-shell plant-detail-shell">
+      <button className="back-link" type="button" onClick={onBack}>← Back to recommendations</button>
+
+      <section className="plant-detail-hero" aria-labelledby="plant-detail-title">
+        <div className="plant-detail-icon">
+          <PlantIcon id={plant.id} icon={plant.icon} name={plant.name} />
+        </div>
+        <div>
+          <p className="eyebrow">Plant detail</p>
+          <h1 id="plant-detail-title">{plant.name}</h1>
+          <div className="plant-detail-tags">
+            <span className="category">{plant.category}</span>
+            <span className={`difficulty difficulty-${difficulty.className}`}>{difficulty.label}</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="plant-detail-grid" aria-label={`${plant.name} growing details`}>
+        <div className="plant-detail-card plant-detail-summary">
+          <h2>Growing snapshot</h2>
+          <dl>
+            <div>
+              <dt>Difficulty</dt>
+              <dd className={`difficulty-value difficulty-${difficulty.className}`}><StarRating rating={difficulty.stars} /></dd>
+            </div>
+            <div>
+              <dt>Best planting months</dt>
+              <dd>{plant.plantingWindowLabel ?? formatMonthRange(plant.suitableMonths)}</dd>
+            </div>
+            <div>
+              <dt>Sun</dt>
+              <dd><SunExposureIcon sun={plant.sun} /><span>{plant.sun}</span></dd>
+            </div>
+            <div>
+              <dt>Water</dt>
+              <dd><WaterDropRating watering={plant.watering} /><span>{plant.watering}</span></dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="plant-detail-card plant-notes-card">
+          <h2>Notes</h2>
+          <p>{plant.notes}</p>
+        </div>
+
+        {careTips.length > 0 && (
+          <div className="plant-detail-card">
+            <h2>Care tips</h2>
+            <ul className="care-tip-list">
+              {careTips.map((tip) => <li key={tip}>{tip}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {detailSections.map((section) => (
+          <div className="plant-detail-card" key={section.title}>
+            <h2>{section.title}</h2>
+            {section.body && <p>{section.body}</p>}
+            {section.items && section.items.length > 0 && (
+              <ul className="care-tip-list">
+                {section.items.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            )}
+          </div>
+        ))}
+      </section>
+    </main>
+  );
+}
+
 function App() {
   const [data, setData] = useState<CurrentRecommendationsResponse | null>(null);
   const [aucklandWeather, setAucklandWeather] = useState<AucklandWeatherResponse | null>(null);
+  const [route, setRoute] = useState<AppRoute>(() => getRouteFromLocation());
+  const [plantDetail, setPlantDetail] = useState<PlantDetail | null>(null);
+  const [isPlantDetailLoading, setIsPlantDetailLoading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -264,6 +421,50 @@ function App() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const handlePopState = () => setRoute(getRouteFromLocation());
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (route.name !== 'plant-detail') {
+      setPlantDetail(null);
+      setIsPlantDetailLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsPlantDetailLoading(true);
+
+    void getPlantDetail(route.id, data?.recommendations).then((plant) => {
+      if (!isMounted) return;
+
+      setPlantDetail(plant);
+      setIsPlantDetailLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [route, data?.recommendations]);
+
+  function navigateToPlant(id: string) {
+    const path = plantDetailPath(id);
+    window.history.pushState(null, '', path);
+    setRoute({ name: 'plant-detail', id });
+  }
+
+  function navigateToHome() {
+    window.history.pushState(null, '', '/');
+    setRoute({ name: 'home' });
+  }
+
+  if (route.name === 'plant-detail') {
+    return <PlantDetailPage plant={plantDetail} isLoading={isPlantDetailLoading} onBack={navigateToHome} />;
+  }
 
   if (!data) {
     return <main className="app-shell loading">Loading seasonal planting ideas…</main>;
@@ -307,40 +508,9 @@ function App() {
             </div>
 
             <div className="plant-grid">
-              {data.recommendations.map((plant) => {
-                const difficulty = getDifficultyMeta(plant.difficulty);
-
-                return (
-                  <article className="plant-card" key={plant.id}>
-                    <div className="card-topline">
-                      <span className="category">{plant.category}</span>
-                      <PlantIcon id={plant.id} icon={plant.icon} name={plant.name} />
-                    </div>
-                    <h3>{plant.name}</h3>
-                    <dl>
-                      <div>
-                        <dt>Planting difficulty</dt>
-                        <dd className={`difficulty-value difficulty-${difficulty.className}`} aria-label={difficulty.label}>
-                          <StarRating rating={difficulty.stars} />
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Suitable months</dt>
-                        <dd>{formatMonthRange(plant.suitableMonths)}</dd>
-                      </div>
-                      <div>
-                        <dt>Sun</dt>
-                        <dd className="sun-visual"><SunExposureIcon sun={plant.sun} /></dd>
-                      </div>
-                      <div>
-                        <dt>Watering</dt>
-                        <dd className="water-visual"><WaterDropRating watering={plant.watering} /></dd>
-                      </div>
-                    </dl>
-                    <p>{plant.notes}</p>
-                  </article>
-                );
-              })}
+              {data.recommendations.map((plant) => (
+                <PlantCardLink plant={plant} onOpen={navigateToPlant} key={plant.id} />
+              ))}
             </div>
           </div>
 

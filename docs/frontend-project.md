@@ -70,7 +70,7 @@ frontend/
 
 ## Routes / Pages
 
-Current app is a single page:
+Current app uses lightweight browser History API routing (no `react-router` yet):
 
 - `/` — home screen showing:
   - `nzPlant` title and New Zealand planting guide tagline
@@ -80,6 +80,8 @@ Current app is a single page:
   - Seasonal recommended plant cards
   - One shared vertical 1-5 star planting difficulty guide
   - Plant cards showing planting difficulty as stars only
+  - Clickable recommendation cards that navigate to plant detail pages
+- `/plants/:id` — plant detail screen showing icon, category, difficulty stars, planting months/window label, sun, water, notes, care tips, optional detail sections, and a `Back to recommendations` button.
 
 ## Current Components
 
@@ -91,7 +93,9 @@ Current MVP keeps UI components in `src/App.tsx`:
 - `HeroWeatherScene` — renders decorative hero background elements for sunny, rainy, cloudy, overcast, sun-shower, and windy states
 - `WaterDropRating` — maps `watering` / backend `water` copy to a compact fixed 5-position water-drop visual while preserving the original guidance in accessibility text and `title`
 - `SunExposureIcon` — renders icon-only sun exposure visual
-- `PlantIcon` (`src/components/PlantIcon.tsx`) — renders inline SVG icons for recommendation cards, prioritizing `plant.icon` from backend/API data and using `plant.id`/`plant.name` only as fallback
+- `PlantIcon` (`src/components/PlantIcon.tsx`) — renders inline SVG icons for recommendation cards and detail pages, prioritizing `plant.icon` from backend/API data and using `plant.id`/`plant.name` only as fallback
+- `PlantCardLink` — clickable recommendation card link that pushes `/plants/:id` with History API
+- `PlantDetailPage` — plant detail route UI with fallback-safe content and back navigation
 - `getDifficultyMeta` — maps backend difficulty labels to UI labels, colors, and stars
 - `getSunIconType` — maps backend sun labels to icon variants
 
@@ -114,6 +118,7 @@ API clients:
 Endpoints:
 
 - `GET /api/recommendations/current`
+- `GET /api/plants/:id`
 - `GET /api/weather/auckland`
 
 Frontend behavior:
@@ -139,6 +144,13 @@ icon?: string;
 ```
 
 The mapping happens inside `normalizeApiResponse` in `src/api/recommendations.ts`. The backend `icon` field is preserved as-is and passed through to plant cards; preserve this unless frontend/backend API contracts are changed together.
+
+Plant detail behavior:
+
+1. On `/plants/:id`, call `GET /api/plants/:id`.
+2. Normalize backend `plantingMonths`/`water` to frontend `suitableMonths`/`watering`.
+3. Preserve optional backend `plantingWindowLabel`, `careTips`, and `detailSections`.
+4. If the detail endpoint fails, build a non-blank fallback from current recommendations or local mock data; unknown ids get a basic generated detail card.
 
 ## Types
 
@@ -366,10 +378,10 @@ Current shared guide layout/copy:
 
 ## Validation Status
 
-Last verified after frontend icon field passthrough:
+Last verified after plant detail page implementation:
 
 ```bash
-./node_modules/.bin/tsc -b
+./node_modules/.bin/tsc -b --noEmit
 ./node_modules/.bin/vite build
 ```
 
@@ -399,6 +411,7 @@ Both passed. Note: `pnpm run typecheck && pnpm run build` was blocked in this en
 - Removed the temporary 20-card weather/title combination preview grid after visual review.
 - Added frontend `icon?: string` support: API normalization preserves backend `icon`, mock recommendations include explicit icon variants, and plant cards pass `plant.icon` to `PlantIcon` before id/name fallback.
 - Connected hero weather to `GET /api/weather/auckland` with payload validation, source/update meta text, and season-based fallback that preserves the existing hero weather class contract.
+- Added `/plants/:id` detail pages using browser History API routing, clickable recommendation cards, `GET /api/plants/:id` integration, fallback detail construction, care tips/detail sections rendering, and `Back to recommendations` navigation.
 
 ## Next Recommended Frontend Tasks
 
