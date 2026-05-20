@@ -70,7 +70,7 @@ frontend/
 
 ## Routes / Pages
 
-Current app uses lightweight browser History API routing (no `react-router` yet):
+Current app uses lightweight browser History API routing (no `react-router` yet), with manual scroll restoration between the recommendation list and detail pages:
 
 - `/` — home screen showing:
   - `nzPlant` title and New Zealand planting guide tagline
@@ -82,6 +82,7 @@ Current app uses lightweight browser History API routing (no `react-router` yet)
   - Plant cards showing planting difficulty as stars only
   - Clickable recommendation cards that navigate to plant detail pages
 - `/plants/:id` — plant detail screen showing icon, category, difficulty stars, planting months/window label, sun, water, notes, care tips, optional detail sections, and a `Back to recommendations` button.
+- When opening a detail page from the scrolled recommendation list, the app stores the home scroll position in History state and restores it when returning via the back button or browser Back.
 
 ## Current Components
 
@@ -412,6 +413,7 @@ Both passed. Note: `pnpm run typecheck && pnpm run build` was blocked in this en
 - Added frontend `icon?: string` support: API normalization preserves backend `icon`, mock recommendations include explicit icon variants, and plant cards pass `plant.icon` to `PlantIcon` before id/name fallback.
 - Connected hero weather to `GET /api/weather/auckland` with payload validation, source/update meta text, and season-based fallback that preserves the existing hero weather class contract.
 - Added `/plants/:id` detail pages using browser History API routing, clickable recommendation cards, `GET /api/plants/:id` integration, fallback detail construction, care tips/detail sections rendering, and `Back to recommendations` navigation.
+- Added manual home scroll restoration so returning from a plant detail page lands back at the previous recommendation-list scroll position instead of the top.
 
 ## Next Recommended Frontend Tasks
 

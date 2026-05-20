@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getCurrentRecommendations, getPlantDetail } from './api/recommendations';
 import { getAucklandWeather } from './api/weather';
 import { PlantIcon } from './components/PlantIcon';
@@ -251,6 +251,10 @@ type AppRoute =
   | { name: 'home' }
   | { name: 'plant-detail'; id: string };
 
+type AppHistoryState = {
+  homeScrollY?: number;
+};
+
 function getRouteFromLocation(): AppRoute {
   const match = window.location.pathname.match(/^\/plants\/([^/]+)\/?$/);
 
@@ -263,6 +267,13 @@ function getRouteFromLocation(): AppRoute {
 
 function plantDetailPath(id: string): string {
   return `/plants/${encodeURIComponent(id)}`;
+}
+
+function getHistoryHomeScrollY(state: unknown): number | null {
+  if (!state || typeof state !== 'object') return null;
+
+  const scrollY = (state as AppHistoryState).homeScrollY;
+  return typeof scrollY === 'number' && Number.isFinite(scrollY) ? scrollY : null;
 }
 
 function PlantCardLink({ plant, onOpen }: { plant: PlantRecommendation; onOpen: (id: string) => void }) {
@@ -406,6 +417,8 @@ function App() {
   const [route, setRoute] = useState<AppRoute>(() => getRouteFromLocation());
   const [plantDetail, setPlantDetail] = useState<PlantDetail | null>(null);
   const [isPlantDetailLoading, setIsPlantDetailLoading] = useState(false);
+  const homeScrollYRef = useRef(0);
+  const pendingHomeScrollYRef = useRef<number | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -423,11 +436,34 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const handlePopState = () => setRoute(getRouteFromLocation());
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+
+    const handlePopState = (event: PopStateEvent) => {
+      const nextRoute = getRouteFromLocation();
+
+      if (nextRoute.name === 'home') {
+        pendingHomeScrollYRef.current = getHistoryHomeScrollY(event.state) ?? homeScrollYRef.current;
+      }
+
+      setRoute(nextRoute);
+    };
 
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+
+    return () => {
+      window.history.scrollRestoration = previousScrollRestoration;
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, []);
+
+  useEffect(() => {
+    if (route.name !== 'home' || !data || pendingHomeScrollYRef.current === null) return;
+
+    const scrollY = pendingHomeScrollYRef.current;
+    pendingHomeScrollYRef.current = null;
+    window.requestAnimationFrame(() => window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' }));
+  }, [route, data]);
 
   useEffect(() => {
     if (route.name !== 'plant-detail') {
@@ -453,12 +489,20 @@ function App() {
 
   function navigateToPlant(id: string) {
     const path = plantDetailPath(id);
-    window.history.pushState(null, '', path);
+    const homeScrollY = window.scrollY;
+
+    homeScrollYRef.current = homeScrollY;
+    window.history.replaceState({ ...window.history.state, homeScrollY }, '', window.location.href);
+    window.history.pushState({ homeScrollY }, '', path);
     setRoute({ name: 'plant-detail', id });
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }
 
   function navigateToHome() {
-    window.history.pushState(null, '', '/');
+    const homeScrollY = homeScrollYRef.current;
+
+    pendingHomeScrollYRef.current = homeScrollY;
+    window.history.pushState({ homeScrollY }, '', '/');
     setRoute({ name: 'home' });
   }
 
