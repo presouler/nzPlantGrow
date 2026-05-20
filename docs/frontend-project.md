@@ -473,3 +473,9 @@ Key CSS areas in `src/styles.css`:
 - `.growth-simulator-card`, `.growth-simulator-stage`, `.growth-range`, `.growth-timeline`, `.growth-stage-dot`
 - `.growth-plant-svg`, `.growth-palette-*`, `.growth-soil`, `.growth-stem`, `.growth-leaf`, `.growth-flowers`, `.growth-harvest`
 - `.growth-stage-icon*` for the supporting reusable icon set
+
+### Growth simulator realism update
+
+- The selected growth stage displays backend `timeLabel` when available, so the simulator reflects crop-specific timing rather than only generic stage numbers.
+- Frontend accepts optional `startDay`/`endDay` for future proportional timelines, while the current UI keeps equal stage stops for simple dragging.
+- If backend timing data is absent or invalid, the simulator still falls back to generic seed-to-mature copy.

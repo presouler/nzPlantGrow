@@ -198,6 +198,9 @@ const defaultGrowthStages: PlantGrowthStage[] = [
     headline: 'Seed',
     description: 'A quiet seed resting in warm, moist soil.',
     tip: 'Keep the bed evenly damp and protected while roots wake up.',
+    timeLabel: 'Week 0',
+    startDay: 0,
+    endDay: 0,
   },
   {
     id: 'sprout',
@@ -205,6 +208,9 @@ const defaultGrowthStages: PlantGrowthStage[] = [
     headline: 'Sprout',
     description: 'The first shoot pushes through and starts chasing light.',
     tip: 'Gentle light and steady moisture help this fragile stage settle.',
+    timeLabel: 'Week 1–2',
+    startDay: 7,
+    endDay: 14,
   },
   {
     id: 'leafy',
@@ -212,6 +218,9 @@ const defaultGrowthStages: PlantGrowthStage[] = [
     headline: 'Leafy growth',
     description: 'Leaves expand quickly as the plant builds energy.',
     tip: 'Check spacing, mulch lightly, and keep weeds from competing.',
+    timeLabel: 'Week 3–6',
+    startDay: 21,
+    endDay: 42,
   },
   {
     id: 'flowering',
@@ -219,6 +228,9 @@ const defaultGrowthStages: PlantGrowthStage[] = [
     headline: 'Flowering',
     description: 'Flowers or strong growing tips show the plant is maturing.',
     tip: 'Avoid stress now; consistent watering supports the next stage.',
+    timeLabel: 'Varies by crop',
+    startDay: 42,
+    endDay: 70,
   },
   {
     id: 'harvest',
@@ -226,6 +238,9 @@ const defaultGrowthStages: PlantGrowthStage[] = [
     headline: 'Harvest ready',
     description: 'Useful leaves, pods, bulbs, or fruit are ready to pick.',
     tip: 'Harvest regularly and gently so the plant keeps its strength.',
+    timeLabel: 'Crop-specific harvest window',
+    startDay: 60,
+    endDay: 100,
   },
   {
     id: 'mature',
@@ -233,6 +248,9 @@ const defaultGrowthStages: PlantGrowthStage[] = [
     headline: 'Mature plant',
     description: 'The plant is fully established and finishing its cycle.',
     tip: 'Collect seed, compost tired growth, or reset the bed for the next crop.',
+    timeLabel: 'End of crop cycle',
+    startDay: 90,
+    endDay: 140,
   },
 ];
 
@@ -334,6 +352,7 @@ function GrowthSimulator({ plant }: { plant: PlantDetail }) {
         <GrowthPlantSvg stage={stage} plant={plant} />
         <div>
           <span className="growth-stage-count">Stage {safeStageIndex + 1} of {stages.length}</span>
+          {stage.timeLabel && <span className="growth-stage-time">{stage.timeLabel}</span>}
           <h3>{stage.headline}</h3>
           <p>{stage.description}</p>
           <small>{stage.tip}</small>

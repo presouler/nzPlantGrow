@@ -24,6 +24,9 @@ export type PlantGrowthStage = {
   headline: string;
   description: string;
   tip: string;
+  timeLabel?: string;
+  startDay?: number;
+  endDay?: number;
   visualHint?: string;
 };
 

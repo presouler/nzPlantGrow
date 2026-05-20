@@ -64,6 +64,9 @@ function normalizeApiGrowthStages(stages: ApiPlantDetail['growthStages']): Plant
       && typeof candidate.headline === 'string'
       && typeof candidate.description === 'string'
       && typeof candidate.tip === 'string'
+      && (candidate.timeLabel === undefined || typeof candidate.timeLabel === 'string')
+      && (candidate.startDay === undefined || typeof candidate.startDay === 'number')
+      && (candidate.endDay === undefined || typeof candidate.endDay === 'number')
       && (candidate.visualHint === undefined || typeof candidate.visualHint === 'string');
   });
 

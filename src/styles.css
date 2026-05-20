@@ -1615,15 +1615,21 @@ dd {
   line-height: 1.6;
 }
 
-.growth-stage-count {
+.growth-stage-count,
+.growth-stage-time {
   display: inline-flex;
-  margin-bottom: 10px;
+  margin: 0 8px 10px 0;
   border-radius: 999px;
   padding: 6px 10px;
   background: #e9f5d3;
   color: #315327;
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+.growth-stage-time {
+  background: #fff7d6;
+  color: #7a5018;
 }
 
 .growth-plant-svg {
