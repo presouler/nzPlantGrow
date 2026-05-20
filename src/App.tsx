@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { getCurrentRecommendations, getPlantDetail } from './api/recommendations';
 import { getAucklandWeather } from './api/weather';
 import { PlantIcon } from './components/PlantIcon';
@@ -186,6 +187,169 @@ function WaterDropRating({ watering }: { watering: string }) {
         </svg>
       ))}
     </span>
+  );
+}
+
+
+const growthStages = [
+  {
+    id: 'seed',
+    label: 'Seed',
+    helper: 'A quiet seed resting in warm, moist soil.',
+    tip: 'Keep the bed evenly damp and protected while roots wake up.',
+  },
+  {
+    id: 'sprout',
+    label: 'Sprout',
+    helper: 'The first shoot pushes through and starts chasing light.',
+    tip: 'Gentle light and steady moisture help this fragile stage settle.',
+  },
+  {
+    id: 'leafy',
+    label: 'Leafy growth',
+    helper: 'Leaves expand quickly as the plant builds energy.',
+    tip: 'Check spacing, mulch lightly, and keep weeds from competing.',
+  },
+  {
+    id: 'flowering',
+    label: 'Flowering',
+    helper: 'Flowers or strong growing tips show the plant is maturing.',
+    tip: 'Avoid stress now; consistent watering supports the next stage.',
+  },
+  {
+    id: 'harvest',
+    label: 'Harvest ready',
+    helper: 'Useful leaves, pods, bulbs, or fruit are ready to pick.',
+    tip: 'Harvest regularly and gently so the plant keeps its strength.',
+  },
+  {
+    id: 'mature',
+    label: 'Mature plant',
+    helper: 'The plant is fully established and finishing its cycle.',
+    tip: 'Collect seed, compost tired growth, or reset the bed for the next crop.',
+  },
+] as const;
+
+type GrowthStage = typeof growthStages[number];
+
+function getGrowthPalette(plant: PlantDetail) {
+  const source = `${plant.icon ?? ''} ${plant.id} ${plant.name}`.toLowerCase();
+
+  if (source.includes('tomato')) return 'tomato';
+  if (source.includes('garlic')) return 'garlic';
+  if (source.includes('silverbeet') || source.includes('chard')) return 'silverbeet';
+  if (source.includes('kawakawa')) return 'kawakawa';
+  if (source.includes('kale')) return 'kale';
+  return 'default';
+}
+
+function GrowthPlantSvg({ stage, plant }: { stage: GrowthStage; plant: PlantDetail }) {
+  const stageIndex = growthStages.findIndex((item) => item.id === stage.id);
+  const palette = getGrowthPalette(plant);
+  const showSprout = stageIndex >= 1;
+  const showLeaves = stageIndex >= 2;
+  const showFlowers = stageIndex >= 3;
+  const showHarvest = stageIndex >= 4;
+  const showMature = stageIndex >= 5;
+
+  return (
+    <svg className={`growth-plant-svg growth-palette-${palette}`} viewBox="0 0 180 160" aria-hidden="true" focusable="false">
+      <ellipse className="growth-soil" cx="90" cy="134" rx="64" ry="16" />
+      {stage.id === 'seed' && (
+        <>
+          <ellipse className="growth-seed" cx="90" cy="124" rx="14" ry="9" />
+          <path className="growth-seed-shine" d="M84 121c4-3 8-4 13-2" />
+        </>
+      )}
+      {showSprout && <path className="growth-stem" d={`M90 124 C88 ${showMature ? 78 : 96}, 91 ${showMature ? 45 : 70}, 90 ${showMature ? 28 : 58}`} />}
+      {showSprout && <path className="growth-leaf growth-leaf-sprout" d="M90 93C72 82 75 68 91 61c10 11 8 24-1 32Z" />}
+      {showLeaves && (
+        <>
+          <path className="growth-leaf growth-leaf-left" d="M88 88C57 76 51 49 73 36c24 9 31 32 15 52Z" />
+          <path className="growth-leaf growth-leaf-right" d="M93 79c31-13 42-38 20-53-25 9-33 32-20 53Z" />
+          <path className="growth-leaf growth-leaf-low" d="M89 110C61 108 48 87 62 69c24 1 39 19 27 41Z" />
+          <path className="growth-leaf growth-leaf-low-right" d="M93 108c28-2 43-22 29-40-24 1-40 18-29 40Z" />
+        </>
+      )}
+      {showFlowers && (
+        <g className="growth-flowers">
+          <circle cx="88" cy="30" r="6" />
+          <circle cx="79" cy="35" r="6" />
+          <circle cx="97" cy="36" r="6" />
+          <circle cx="88" cy="41" r="6" />
+          <circle className="growth-flower-core" cx="88" cy="36" r="5" />
+        </g>
+      )}
+      {showHarvest && (
+        <g className="growth-harvest">
+          <circle cx="67" cy="78" r="8" />
+          <circle cx="113" cy="72" r="8" />
+          <ellipse cx="88" cy="106" rx="8" ry="11" />
+        </g>
+      )}
+      {showMature && (
+        <>
+          <path className="growth-mature-arch" d="M51 55C76 18 116 18 139 55" />
+          <path className="growth-leaf growth-leaf-mature-left" d="M63 58C35 48 33 25 54 17c21 10 25 29 9 41Z" />
+          <path className="growth-leaf growth-leaf-mature-right" d="M119 57c28-10 31-34 10-42-22 10-27 30-10 42Z" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function GrowthSimulator({ plant }: { plant: PlantDetail }) {
+  const [stageIndex, setStageIndex] = useState(2);
+  const stage = growthStages[stageIndex];
+  const progress = stageIndex / (growthStages.length - 1);
+
+  return (
+    <div className="plant-detail-card growth-simulator-card">
+      <div className="growth-simulator-copy">
+        <p className="eyebrow">Interactive guide</p>
+        <h2>Growth simulator</h2>
+        <p>Drag the timeline to preview how {plant.name} changes from seed to mature plant.</p>
+      </div>
+
+      <div className="growth-simulator-stage" aria-live="polite">
+        <GrowthPlantSvg stage={stage} plant={plant} />
+        <div>
+          <span className="growth-stage-count">Stage {stageIndex + 1} of {growthStages.length}</span>
+          <h3>{stage.label}</h3>
+          <p>{stage.helper}</p>
+          <small>{stage.tip}</small>
+        </div>
+      </div>
+
+      <label className="growth-range-label" htmlFor="growth-stage-range">Growth timeline</label>
+      <input
+        id="growth-stage-range"
+        className="growth-range"
+        type="range"
+        min="0"
+        max={growthStages.length - 1}
+        step="1"
+        value={stageIndex}
+        aria-valuetext={stage.label}
+        onChange={(event) => setStageIndex(Number(event.currentTarget.value))}
+      />
+
+      <div className="growth-timeline" style={{ '--growth-progress': `${progress * 100}%` } as CSSProperties} aria-label="Choose growth stage">
+        {growthStages.map((item, index) => (
+          <button
+            className={index <= stageIndex ? 'growth-stage-dot is-active' : 'growth-stage-dot'}
+            type="button"
+            key={item.id}
+            onClick={() => setStageIndex(index)}
+            aria-pressed={index === stageIndex}
+            aria-label={`Show ${item.label} stage`}
+          >
+            <span aria-hidden="true">{index + 1}</span>
+            <strong>{item.label}</strong>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -385,6 +549,8 @@ function PlantDetailPage({ plant, isLoading, onBack }: { plant: PlantDetail | nu
           <h2>Notes</h2>
           <p>{plant.notes}</p>
         </div>
+
+        <GrowthSimulator plant={plant} />
 
         {careTips.length > 0 && (
           <div className="plant-detail-card">

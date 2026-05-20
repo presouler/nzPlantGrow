@@ -424,3 +424,32 @@ Both passed. Note: `pnpm run typecheck && pnpm run build` was blocked in this en
 5. Add loading/error states beyond the current simple loading message.
 6. Add tests after component split.
 7. Commit and push initial frontend MVP.
+
+## Plant Detail Growth Simulator
+
+The `/plants/:id` detail screen includes an interactive `GrowthSimulator` card in `src/App.tsx`.
+
+Current behavior:
+
+- Users can drag a keyboard-accessible range slider to preview plant growth.
+- Users can also click stage buttons along the timeline.
+- The current stage updates live with matching SVG artwork, stage label, helper copy, and care tip.
+- The simulator covers six stages: `seed`, `sprout`, `leafy`, `flowering`, `harvest`, and `mature`.
+- Visuals are inline SVG/CSS only; no external image dependency.
+- The main growth SVG palette lightly adapts for tomato, garlic, silverbeet, kawakawa, and kale while keeping a generic garden fallback.
+- The module is local to the detail page and does not change History API navigation or the existing home scroll restoration behavior.
+
+Supporting design asset:
+
+- `src/components/GrowthStageIcon.tsx`
+  - Exports `GrowthStageIcon`
+  - Provides a smaller rounded-tile stage icon set for future reuse in chips, summaries, or onboarding
+  - Supported stages: `seed`, `sprout`, `leafy`, `flowering`, `harvest`
+  - Inline SVG only; no external image dependency
+  - Matches the existing rounded garden-themed `PlantIcon` visual language
+
+Key CSS areas in `src/styles.css`:
+
+- `.growth-simulator-card`, `.growth-simulator-stage`, `.growth-range`, `.growth-timeline`, `.growth-stage-dot`
+- `.growth-plant-svg`, `.growth-palette-*`, `.growth-soil`, `.growth-stem`, `.growth-leaf`, `.growth-flowers`, `.growth-harvest`
+- `.growth-stage-icon*` for the supporting reusable icon set
