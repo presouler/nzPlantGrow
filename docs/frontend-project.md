@@ -453,10 +453,10 @@ Current behavior:
 
 - Users can drag a keyboard-accessible range slider to preview plant growth.
 - Users can also click stage buttons along the timeline.
-- The current stage updates live with matching SVG artwork, stage label, helper copy, and care tip.
+- The current stage updates live with matching artwork, stage label, helper copy, and care tip.
 - The simulator covers six stages: `seed`, `sprout`, `leafy`, `flowering`, `harvest`, and `mature`.
-- Visuals are inline SVG/CSS only; no external image dependency.
-- The main growth SVG palette lightly adapts for tomato, garlic, silverbeet, kawakawa, and kale while keeping a generic garden fallback.
+- Primary recommended crops use generated raster PNG stage assets from `public/growth-stages/<plant>/<stage>.png` for stronger recognition at card size.
+- Remaining unsupported/fallback crops can still render with the inline SVG fallback.
 - The module is local to the detail page and does not change History API navigation or the existing home scroll restoration behavior.
 
 Supporting design asset:
@@ -471,11 +471,27 @@ Supporting design asset:
 Key CSS areas in `src/styles.css`:
 
 - `.growth-simulator-card`, `.growth-simulator-stage`, `.growth-range`, `.growth-timeline`, `.growth-stage-dot`
-- `.growth-plant-svg`, `.growth-palette-*`, `.growth-soil`, `.growth-stem`, `.growth-leaf`, `.growth-flowers`, `.growth-harvest`
+- `.growth-plant-image`, `.growth-plant-svg`, `.growth-palette-*`, `.growth-soil`, `.growth-stem`, `.growth-leaf`, `.growth-flowers`, `.growth-harvest`
 - `.growth-stage-icon*` for the supporting reusable icon set
 
 ### Growth simulator realism update
 
 - The selected growth stage displays backend `timeLabel` when available, so the simulator reflects crop-specific timing rather than only generic stage numbers.
+- Stage artwork is crop-aware: harvest/mature visuals use produce only when that plant actually has that produce. Example: spinach mature/harvest assets must never show tomato-like red fruit.
 - Frontend accepts optional `startDay`/`endDay` for future proportional timelines, while the current UI keeps equal stage stops for simple dragging.
 - If backend timing data is absent or invalid, the simulator still falls back to generic seed-to-mature copy.
+
+### Growth simulator raster asset strategy
+
+- `GrowthSimulator` resolves a crop palette from `plant.growthStages[].visualHint`, `plant.icon`, `plant.id`, and `plant.name`.
+- Raster-backed plants are defined in `rasterGrowthPlants` and rendered by `RasterGrowthImage`.
+- Current raster-backed plants: `tomato`, `lettuce`, `broad-bean`, `silverbeet`, `coriander`, `parsley`, `kawakawa`, and `spinach`.
+- Each raster-backed plant must provide six canonical files:
+  - `public/growth-stages/<plant>/seed.png`
+  - `public/growth-stages/<plant>/sprout.png`
+  - `public/growth-stages/<plant>/leafy.png`
+  - `public/growth-stages/<plant>/flowering.png`
+  - `public/growth-stages/<plant>/harvest.png`
+  - `public/growth-stages/<plant>/mature.png`
+- Keep image prompts/selection focused on real plant morphology, not decorative colour. If SVG is not recognisable enough at card size, prefer staged raster assets before spending more time on path details.
+- Remaining palettes such as `kale`, `garlic`, and `default` keep the SVG fallback until dedicated assets are added.

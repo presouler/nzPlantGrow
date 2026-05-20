@@ -1632,11 +1632,30 @@ dd {
   color: #7a5018;
 }
 
-.growth-plant-svg {
+.growth-plant-svg,
+.growth-plant-image {
   width: min(100%, 280px);
   min-height: 190px;
   justify-self: center;
   filter: drop-shadow(0 18px 24px rgba(46, 82, 38, 0.12));
+}
+
+.growth-plant-image {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #fbf7ec;
+  border: 1px solid rgba(89, 128, 48, 0.16);
+}
+
+.growth-plant-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 190px;
+  object-fit: cover;
 }
 
 .growth-soil { fill: #9a6a3a; opacity: 0.28; }
@@ -1659,15 +1678,27 @@ dd {
 .growth-leaf-low-right,
 .growth-leaf-mature-right { fill: #82bd4f; }
 .growth-leaf-sprout { fill: #8bc85a; }
-.growth-flowers circle { fill: #f8d76c; stroke: #df9f25; stroke-width: 2; }
+.growth-flowers circle,
+.growth-flowers ellipse { fill: #f8d76c; stroke: #df9f25; stroke-width: 2; }
 .growth-flowers .growth-flower-core { fill: #f59e0b; stroke: none; }
+.growth-bean-flowers ellipse { fill: #f7f3e8; stroke: #3b2d2f; }
+.growth-seed-stalk circle { fill: #c8b26c; stroke: #7d713d; stroke-width: 1.5; }
+.growth-stem-thin { stroke-width: 4; }
+.growth-stem-herb { stroke-width: 3; }
+.growth-herb-leaf { fill: #5fa447; stroke: #2f6b28; stroke-width: 1.5; }
 .growth-harvest circle,
 .growth-harvest ellipse { fill: #e85d45; stroke: #9f3a2d; stroke-width: 2; }
-.growth-palette-garlic .growth-harvest circle,
-.growth-palette-garlic .growth-harvest ellipse { fill: #f2ead3; stroke: #c9b98d; }
+.growth-harvest path { fill: none; stroke: #3d8f3d; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+.growth-harvest-leafy path { fill: #65a844; stroke: #2f6b28; stroke-width: 2; }
+.growth-harvest-beans path { stroke: #4f9b45; }
+.growth-harvest-kawakawa ellipse { fill: #f07a2f; stroke: #a3481d; }
+.growth-harvest-garlic path { fill: #f2ead3; stroke: #c9b98d; stroke-width: 2; }
+.growth-palette-spinach .growth-leaf { fill: #3f8f43; }
+.growth-palette-lettuce .growth-leaf { fill: #8fca5f; }
 .growth-palette-silverbeet .growth-stem { stroke: #d5a832; }
-.growth-palette-silverbeet .growth-harvest circle,
-.growth-palette-silverbeet .growth-harvest ellipse { fill: #f2c94c; stroke: #9b6b1f; }
+.growth-palette-silverbeet .growth-leaf { fill: #4d9a4f; }
+.growth-palette-coriander .growth-herb-leaf { fill: #63ad4d; }
+.growth-palette-parsley .growth-herb-leaf { fill: #4f9340; }
 .growth-palette-kawakawa .growth-leaf { fill: #4f9b54; }
 .growth-palette-kale .growth-leaf { fill: #3f7d42; }
 .growth-palette-tomato .growth-harvest circle,
@@ -1891,6 +1922,212 @@ dd {
   stroke: #397032;
   stroke-width: 1.6;
   stroke-linejoin: round;
+}
+
+/* Crop-specific growth simulator details: shape first, colour second. */
+.growth-tomato-branch,
+.growth-herb-cut,
+.growth-kawakawa-veins,
+.growth-cut-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.growth-tomato-branch {
+  stroke: #3f7d35;
+  stroke-width: 3.2;
+}
+
+.growth-tomato-flowers path {
+  fill: #ffd85a;
+  stroke: #b88716;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.growth-tomato-flowers .growth-flower-core {
+  fill: #8f5d18;
+  stroke: none;
+}
+
+.growth-harvest-beans path {
+  fill: none;
+  stroke: #4f9b45;
+  stroke-width: 9;
+}
+
+.growth-harvest-beans circle {
+  fill: #d8f0a3;
+  stroke: #377b38;
+  stroke-width: 1.6;
+}
+
+.growth-coriander-leaf {
+  fill: #69b75a;
+}
+
+.growth-herb-cut {
+  stroke: #2f6b28;
+  stroke-width: 1.4;
+}
+
+.growth-kawakawa-leaf {
+  fill: #4f9b54;
+}
+
+.growth-kawakawa-veins {
+  stroke: #2f6b28;
+  stroke-width: 2;
+}
+
+.growth-kawakawa-hole {
+  fill: #f5f7ed;
+  stroke: #2f6b28;
+  stroke-width: 1.2;
+}
+
+.growth-kawakawa-catkin ellipse,
+.growth-harvest-kawakawa ellipse {
+  fill: #f07a2f;
+  stroke: #a3481d;
+  stroke-width: 2;
+}
+
+.growth-cut-line {
+  stroke: #315327;
+  stroke-width: 4;
+  stroke-dasharray: 6 6;
+  opacity: 0.7;
+}
+
+.growth-palette-spinach .growth-leaf { fill: #3f8f43; }
+.growth-palette-lettuce .growth-leaf { fill: #8fca5f; }
+.growth-palette-silverbeet .growth-stem { stroke: #d5a832; }
+.growth-palette-silverbeet .growth-leaf { fill: #4d9a4f; }
+.growth-palette-coriander .growth-herb-leaf { fill: #63ad4d; }
+.growth-palette-parsley .growth-herb-leaf { fill: #4f9340; }
+.growth-palette-kawakawa .growth-leaf { fill: #4f9b54; }
+.growth-palette-kale .growth-leaf { fill: #3f7d42; }
+.growth-palette-tomato .growth-leaf { fill: #5fa447; }
+
+.lettuce-growth-svg .growth-soil {
+  fill: #9a6a3a;
+  opacity: 0.26;
+}
+
+.lettuce-seed {
+  fill: #b8793a;
+  stroke: #8b6635;
+  stroke-width: 2;
+}
+
+.lettuce-baby-stem,
+.lettuce-bolt-stem,
+.lettuce-bolt-side {
+  fill: none;
+  stroke: #4e8d37;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lettuce-baby-stem { stroke-width: 4; }
+.lettuce-bolt-stem { stroke-width: 6; }
+.lettuce-bolt-side { stroke-width: 3; }
+
+.lettuce-cotyledon,
+.lettuce-leaf,
+.lettuce-bolt-leaf {
+  stroke: #39743a;
+  stroke-linejoin: round;
+}
+
+.lettuce-cotyledon {
+  fill: #a9d872;
+  stroke-width: 2;
+}
+
+.lettuce-leaf {
+  fill: #a6d86f;
+  stroke-width: 2.2;
+}
+
+.lettuce-leaf-back { fill: #8fca5f; }
+.lettuce-leaf-mid { fill: #b9e27c; }
+.lettuce-leaf-front-left,
+.lettuce-leaf-front-right { fill: #cfec92; }
+.lettuce-heart { fill: #e3f6ad; }
+
+.lettuce-rosette-harvest .lettuce-leaf-back { fill: #86bd58; }
+.lettuce-rosette-harvest .lettuce-leaf-mid { fill: #aeda72; }
+.lettuce-rosette-harvest .lettuce-heart { fill: #e8f8b4; }
+
+.lettuce-rosette-mature .lettuce-leaf {
+  fill: #8eb85d;
+  stroke: #517438;
+}
+
+.lettuce-rosette-mature .lettuce-heart { fill: #c8d982; }
+
+.lettuce-ruffle,
+.lettuce-head-ring,
+.lettuce-aged-edge {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lettuce-ruffle {
+  stroke: rgba(49, 83, 39, 0.42);
+  stroke-width: 2.2;
+}
+
+.lettuce-head-ring {
+  stroke: rgba(49, 83, 39, 0.48);
+  stroke-width: 3;
+}
+
+.lettuce-aged-edge {
+  stroke: #b38a35;
+  stroke-width: 3;
+}
+
+.lettuce-bolt-leaf {
+  fill: #93c965;
+  stroke-width: 2;
+}
+
+.lettuce-bolting-mature .lettuce-bolt-stem,
+.lettuce-bolting-mature .lettuce-bolt-side {
+  stroke: #6f7f3f;
+}
+
+.lettuce-yellow-flowers path {
+  fill: #f7c948;
+  stroke: #b98518;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.lettuce-yellow-flowers circle {
+  fill: #8f5d18;
+}
+
+.lettuce-seed-tufts circle {
+  fill: #e9dba8;
+  stroke: #9a874c;
+  stroke-width: 1.4;
+}
+
+.growth-palette-spinach .growth-harvest-leafy circle,
+.growth-palette-spinach .growth-harvest-leafy ellipse {
+  fill: #3f8f43;
+  stroke: #2f6b28;
+}
+
+.growth-palette-spinach .growth-harvest,
+.growth-palette-spinach .growth-seed-stalk {
+  --no-tomato-red: #3f8f43;
 }
 
 @media (max-width: 640px) {
