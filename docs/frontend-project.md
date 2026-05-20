@@ -59,6 +59,7 @@ frontend/
     vite-env.d.ts
     api/
       recommendations.ts
+      weather.ts
     components/
       PlantIcon.tsx
     data/
@@ -105,13 +106,15 @@ Future split candidates:
 
 ## API Calls
 
-API client:
+API clients:
 
 - `src/api/recommendations.ts`
+- `src/api/weather.ts`
 
-Endpoint:
+Endpoints:
 
 - `GET /api/recommendations/current`
+- `GET /api/weather/auckland`
 
 Frontend behavior:
 
@@ -146,6 +149,10 @@ Defined in `src/types.ts`:
 - `ApiPlantRecommendation`
 - `CurrentRecommendationsResponse`
 - `ApiCurrentRecommendationsResponse`
+- `WeatherCondition`
+- `TemperatureComfort`
+- `HeroWeather`
+- `AucklandWeatherResponse`
 
 Difficulty currently accepts backend and frontend labels:
 
@@ -222,13 +229,16 @@ The hero includes weather-driven title/background styling in `src/App.tsx`:
   - Cloudy / overcast / rainy / sun-shower: cloud layers
   - Windy: wind streaks and falling leaves
 - UI displays weather through the hero/title background and decorative scene elements; there is no separate weather information card.
-- The title facts row still shows today’s temperature as a compact pill next to date and season.
+- The title facts row shows today’s temperature as a compact pill only when live Auckland weather is available, so refresh/fallback states do not show the old mock `18°C` value.
+- When real weather loads, a small meta line under the facts row shows Auckland location/source/update time; there is still no separate weather information card.
 - Decorative scene elements sit behind the title/date/season/temperature content and are hidden from assistive tech.
 
 Current data source:
 
-- `getHeroWeather(season)` uses a local season-based fallback so the UI is wired without blocking on an external weather API.
-- Replace this later with a real weather endpoint/client while keeping the same `HeroWeather` condition/comfort/temperature shape and hero variant class contract.
+- `src/api/weather.ts` fetches `GET /api/weather/auckland`, expecting `location`, `temperatureCelsius`, `condition`, `comfort`, `observedAt`, and `source`.
+- `App` requests recommendations and Auckland weather together on initial page load, then renders the hero once the weather request has settled. This prevents a refresh-time flash of the old season-based mock temperature before real Auckland weather arrives.
+- `getHeroWeather(season, weather)` prefers the validated API weather and falls back to local season-based hero weather only when the endpoint fails or returns an unsupported payload; fallback weather can still drive background styling, but the visible temperature pill is hidden unless live weather exists.
+- Keep the `HeroWeather` condition/comfort/temperature shape and hero variant class contract stable unless frontend/backend API contracts are changed together.
 
 ## Plant Card Display Contract
 
@@ -385,6 +395,7 @@ Both passed. Note: `pnpm run typecheck && pnpm run build` was blocked in this en
 - Removed the separate hero weather information card; weather is represented by the title background and scene elements, while temperature remains visible as a compact hero pill.
 - Removed the temporary 20-card weather/title combination preview grid after visual review.
 - Added frontend `icon?: string` support: API normalization preserves backend `icon`, mock recommendations include explicit icon variants, and plant cards pass `plant.icon` to `PlantIcon` before id/name fallback.
+- Connected hero weather to `GET /api/weather/auckland` with payload validation, source/update meta text, and season-based fallback that preserves the existing hero weather class contract.
 
 ## Next Recommended Frontend Tasks
 

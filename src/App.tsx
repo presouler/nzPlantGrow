@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getCurrentRecommendations } from './api/recommendations';
+import { getAucklandWeather } from './api/weather';
 import { PlantIcon } from './components/PlantIcon';
-import type { CurrentRecommendationsResponse } from './types';
+import type { AucklandWeatherResponse, CurrentRecommendationsResponse, HeroWeather, WeatherCondition } from './types';
 import { formatMonthRange } from './utils/season';
 
 const difficultyMeta = {
@@ -40,16 +41,6 @@ const difficultyGuide = [
   { stars: 5, text: 'Advanced; best with gardening experience or a protected growing space.' },
 ];
 
-type WeatherCondition = 'cloudy' | 'overcast' | 'sunny' | 'rainy' | 'sun-shower' | 'windy';
-
-type TemperatureComfort = 'cold' | 'suitable' | 'hot' | 'very-hot';
-
-type HeroWeather = {
-  condition: WeatherCondition;
-  comfort: TemperatureComfort;
-  temperatureCelsius: number;
-};
-
 const seasonWeatherFallback: Record<string, HeroWeather> = {
   summer: {
     condition: 'sunny',
@@ -73,8 +64,24 @@ const seasonWeatherFallback: Record<string, HeroWeather> = {
   },
 };
 
-function getHeroWeather(season: string): HeroWeather {
-  return seasonWeatherFallback[season.toLowerCase()] ?? seasonWeatherFallback.spring;
+function getHeroWeather(season: string, weather: AucklandWeatherResponse | null): HeroWeather {
+  return weather ?? seasonWeatherFallback[season.toLowerCase()] ?? seasonWeatherFallback.spring;
+}
+
+function formatWeatherObservedAt(observedAt: string): string {
+  const date = new Date(observedAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return observedAt;
+  }
+
+  return new Intl.DateTimeFormat('en-NZ', {
+    timeZone: 'Pacific/Auckland',
+    hour: 'numeric',
+    minute: '2-digit',
+    day: 'numeric',
+    month: 'short',
+  }).format(date);
 }
 
 function HeroWeatherScene({ condition }: { condition: WeatherCondition }) {
@@ -241,16 +248,29 @@ function SunExposureIcon({ sun }: { sun: string }) {
 
 function App() {
   const [data, setData] = useState<CurrentRecommendationsResponse | null>(null);
+  const [aucklandWeather, setAucklandWeather] = useState<AucklandWeatherResponse | null>(null);
 
   useEffect(() => {
-    void getCurrentRecommendations().then(setData);
+    let isMounted = true;
+
+    void Promise.all([getCurrentRecommendations(), getAucklandWeather()]).then(([recommendations, weather]) => {
+      if (!isMounted) return;
+
+      setAucklandWeather(weather);
+      setData(recommendations);
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (!data) {
     return <main className="app-shell loading">Loading seasonal planting ideas…</main>;
   }
 
-  const heroWeather = getHeroWeather(data.season);
+  const heroWeather = getHeroWeather(data.season, aucklandWeather);
+  const hasLiveWeather = aucklandWeather !== null;
 
   return (
     <main className="app-shell">
@@ -264,10 +284,18 @@ function App() {
         <div className="hero-facts" aria-label="Current recommendation context">
           <span>{data.date}</span>
           <strong>{data.season}</strong>
-          <strong className="hero-temperature" aria-label={`Today’s temperature ${heroWeather.temperatureCelsius} degrees Celsius`}>
-            {heroWeather.temperatureCelsius}°C
-          </strong>
+          {hasLiveWeather && (
+            <strong className="hero-temperature" aria-label={`Today’s temperature ${heroWeather.temperatureCelsius} degrees Celsius`}>
+              {heroWeather.temperatureCelsius}°C
+            </strong>
+          )}
         </div>
+        {aucklandWeather && (
+          <p className="hero-weather-meta">
+            {aucklandWeather.location} weather from {aucklandWeather.source} · updated{' '}
+            {formatWeatherObservedAt(aucklandWeather.observedAt)}
+          </p>
+        )}
       </section>
 
       <section className="recommendations" aria-labelledby="recommendations-title">

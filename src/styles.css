@@ -345,6 +345,13 @@ h1 {
   color: #7f1d1d;
 }
 
+.hero-weather-meta {
+  max-width: 620px;
+  margin: 14px 0 0;
+  color: rgba(248, 255, 233, 0.78);
+  font-size: 0.92rem;
+}
+
 .recommendations {
   margin-top: 42px;
 }

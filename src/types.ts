@@ -1,5 +1,21 @@
 export type PlantDifficulty = 'easy' | 'medium' | 'hard' | 'Easy' | 'Moderate' | 'Advanced';
 
+export type WeatherCondition = 'cloudy' | 'overcast' | 'sunny' | 'rainy' | 'sun-shower' | 'windy';
+
+export type TemperatureComfort = 'cold' | 'suitable' | 'hot' | 'very-hot';
+
+export type HeroWeather = {
+  condition: WeatherCondition;
+  comfort: TemperatureComfort;
+  temperatureCelsius: number;
+};
+
+export type AucklandWeatherResponse = HeroWeather & {
+  location: string;
+  observedAt: string;
+  source: string;
+};
+
 export type PlantRecommendation = {
   id: string;
   name: string;
