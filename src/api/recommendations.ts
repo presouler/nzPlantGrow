@@ -5,6 +5,7 @@ import type {
   ApiPlantRecommendation,
   CurrentRecommendationsResponse,
   PlantDetail,
+  PlantGrowthStage,
   PlantRecommendation,
 } from '../types';
 import { getNzMonth, getNzSeason, formatNzDate, formatMonthRange } from '../utils/season';
@@ -47,12 +48,35 @@ function normalizeApiResponse(apiResponse: ApiCurrentRecommendationsResponse): C
   };
 }
 
+const growthStageIds = new Set(['seed', 'sprout', 'leafy', 'flowering', 'harvest', 'mature']);
+
+function normalizeApiGrowthStages(stages: ApiPlantDetail['growthStages']): PlantGrowthStage[] | undefined {
+  if (!Array.isArray(stages)) return undefined;
+
+  const normalizedStages = stages.filter((stage): stage is PlantGrowthStage => {
+    if (stage === null || typeof stage !== 'object') return false;
+
+    const candidate = stage as Record<string, unknown>;
+
+    return typeof candidate.id === 'string'
+      && growthStageIds.has(candidate.id)
+      && typeof candidate.label === 'string'
+      && typeof candidate.headline === 'string'
+      && typeof candidate.description === 'string'
+      && typeof candidate.tip === 'string'
+      && (candidate.visualHint === undefined || typeof candidate.visualHint === 'string');
+  });
+
+  return normalizedStages.length > 0 ? normalizedStages : undefined;
+}
+
 function normalizeApiPlantDetail(plant: ApiPlantDetail): PlantDetail {
   return {
     ...normalizeApiPlant(plant),
     plantingWindowLabel: plant.plantingWindowLabel,
     careTips: plant.careTips,
     detailSections: plant.detailSections,
+    growthStages: normalizeApiGrowthStages(plant.growthStages),
   };
 }
 

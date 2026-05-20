@@ -97,6 +97,7 @@ Current MVP keeps UI components in `src/App.tsx`:
 - `PlantIcon` (`src/components/PlantIcon.tsx`) — renders inline SVG icons for recommendation cards and detail pages, prioritizing `plant.icon` from backend/API data and using `plant.id`/`plant.name` only as fallback
 - `PlantCardLink` — clickable recommendation card link that pushes `/plants/:id` with History API
 - `PlantDetailPage` — plant detail route UI with fallback-safe content and back navigation
+- `GrowthSimulator` — interactive detail-page growth timeline. It prefers backend `plant.growthStages` from `GET /api/plants/:id` and falls back to the built-in generic seed-to-mature stages when no backend data is present.
 - `getDifficultyMeta` — maps backend difficulty labels to UI labels, colors, and stars
 - `getSunIconType` — maps backend sun labels to icon variants
 
@@ -150,8 +151,9 @@ Plant detail behavior:
 
 1. On `/plants/:id`, call `GET /api/plants/:id`.
 2. Normalize backend `plantingMonths`/`water` to frontend `suitableMonths`/`watering`.
-3. Preserve optional backend `plantingWindowLabel`, `careTips`, and `detailSections`.
-4. If the detail endpoint fails, build a non-blank fallback from current recommendations or local mock data; unknown ids get a basic generated detail card.
+3. Preserve optional backend `plantingWindowLabel`, `careTips`, `detailSections`, and `growthStages`.
+4. If `growthStages` is present, the detail-page `GrowthSimulator` uses it for stage labels/headlines/descriptions/tips; if absent or invalid, the simulator keeps the built-in default stage fallback.
+5. If the detail endpoint fails, build a non-blank fallback from current recommendations or local mock data; unknown ids get a basic generated detail card.
 
 ## Types
 
@@ -159,6 +161,8 @@ Defined in `src/types.ts`:
 
 - `PlantDifficulty`
 - `PlantRecommendation`
+- `PlantGrowthStage`
+- `GrowthStageId`
 - `ApiPlantRecommendation`
 - `CurrentRecommendationsResponse`
 - `ApiCurrentRecommendationsResponse`
@@ -166,6 +170,22 @@ Defined in `src/types.ts`:
 - `TemperatureComfort`
 - `HeroWeather`
 - `AucklandWeatherResponse`
+
+
+Plant detail `growthStages` contract:
+
+```ts
+growthStages?: Array<{
+  id: 'seed' | 'sprout' | 'leafy' | 'flowering' | 'harvest' | 'mature';
+  label: string;
+  headline: string;
+  description: string;
+  tip: string;
+  visualHint?: string;
+}>;
+```
+
+The frontend normalizer filters invalid/empty `growthStages`. `visualHint` is currently lightweight metadata used only to influence the simulator palette when it matches known hints.
 
 Difficulty currently accepts backend and frontend labels:
 

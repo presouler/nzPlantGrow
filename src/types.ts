@@ -16,6 +16,17 @@ export type AucklandWeatherResponse = HeroWeather & {
   source: string;
 };
 
+export type GrowthStageId = 'seed' | 'sprout' | 'leafy' | 'flowering' | 'harvest' | 'mature';
+
+export type PlantGrowthStage = {
+  id: GrowthStageId;
+  label: string;
+  headline: string;
+  description: string;
+  tip: string;
+  visualHint?: string;
+};
+
 export type PlantRecommendation = {
   id: string;
   name: string;
@@ -38,6 +49,7 @@ export type PlantDetail = PlantRecommendation & {
   plantingWindowLabel?: string;
   careTips?: string[];
   detailSections?: PlantDetailSection[];
+  growthStages?: PlantGrowthStage[];
 };
 
 export type ApiPlantRecommendation = {
@@ -56,6 +68,7 @@ export type ApiPlantDetail = ApiPlantRecommendation & {
   plantingWindowLabel?: string;
   careTips?: string[];
   detailSections?: PlantDetailSection[];
+  growthStages?: unknown;
 };
 
 export type CurrentRecommendationsResponse = {

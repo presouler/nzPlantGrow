@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { getCurrentRecommendations, getPlantDetail } from './api/recommendations';
 import { getAucklandWeather } from './api/weather';
 import { PlantIcon } from './components/PlantIcon';
-import type { AucklandWeatherResponse, CurrentRecommendationsResponse, HeroWeather, PlantDetail, PlantRecommendation, WeatherCondition } from './types';
+import type { AucklandWeatherResponse, CurrentRecommendationsResponse, GrowthStageId, HeroWeather, PlantDetail, PlantGrowthStage, PlantRecommendation, WeatherCondition } from './types';
 import { formatMonthRange } from './utils/season';
 
 const difficultyMeta = {
@@ -191,49 +191,62 @@ function WaterDropRating({ watering }: { watering: string }) {
 }
 
 
-const growthStages = [
+const defaultGrowthStages: PlantGrowthStage[] = [
   {
     id: 'seed',
     label: 'Seed',
-    helper: 'A quiet seed resting in warm, moist soil.',
+    headline: 'Seed',
+    description: 'A quiet seed resting in warm, moist soil.',
     tip: 'Keep the bed evenly damp and protected while roots wake up.',
   },
   {
     id: 'sprout',
     label: 'Sprout',
-    helper: 'The first shoot pushes through and starts chasing light.',
+    headline: 'Sprout',
+    description: 'The first shoot pushes through and starts chasing light.',
     tip: 'Gentle light and steady moisture help this fragile stage settle.',
   },
   {
     id: 'leafy',
     label: 'Leafy growth',
-    helper: 'Leaves expand quickly as the plant builds energy.',
+    headline: 'Leafy growth',
+    description: 'Leaves expand quickly as the plant builds energy.',
     tip: 'Check spacing, mulch lightly, and keep weeds from competing.',
   },
   {
     id: 'flowering',
     label: 'Flowering',
-    helper: 'Flowers or strong growing tips show the plant is maturing.',
+    headline: 'Flowering',
+    description: 'Flowers or strong growing tips show the plant is maturing.',
     tip: 'Avoid stress now; consistent watering supports the next stage.',
   },
   {
     id: 'harvest',
     label: 'Harvest ready',
-    helper: 'Useful leaves, pods, bulbs, or fruit are ready to pick.',
+    headline: 'Harvest ready',
+    description: 'Useful leaves, pods, bulbs, or fruit are ready to pick.',
     tip: 'Harvest regularly and gently so the plant keeps its strength.',
   },
   {
     id: 'mature',
     label: 'Mature plant',
-    helper: 'The plant is fully established and finishing its cycle.',
+    headline: 'Mature plant',
+    description: 'The plant is fully established and finishing its cycle.',
     tip: 'Collect seed, compost tired growth, or reset the bed for the next crop.',
   },
-] as const;
+];
 
-type GrowthStage = typeof growthStages[number];
+const growthStageOrder: Record<GrowthStageId, number> = {
+  seed: 0,
+  sprout: 1,
+  leafy: 2,
+  flowering: 3,
+  harvest: 4,
+  mature: 5,
+};
 
-function getGrowthPalette(plant: PlantDetail) {
-  const source = `${plant.icon ?? ''} ${plant.id} ${plant.name}`.toLowerCase();
+function getGrowthPalette(plant: PlantDetail, visualHint?: string) {
+  const source = `${visualHint ?? ''} ${plant.icon ?? ''} ${plant.id} ${plant.name}`.toLowerCase();
 
   if (source.includes('tomato')) return 'tomato';
   if (source.includes('garlic')) return 'garlic';
@@ -243,9 +256,9 @@ function getGrowthPalette(plant: PlantDetail) {
   return 'default';
 }
 
-function GrowthPlantSvg({ stage, plant }: { stage: GrowthStage; plant: PlantDetail }) {
-  const stageIndex = growthStages.findIndex((item) => item.id === stage.id);
-  const palette = getGrowthPalette(plant);
+function GrowthPlantSvg({ stage, plant }: { stage: PlantGrowthStage; plant: PlantDetail }) {
+  const stageIndex = growthStageOrder[stage.id];
+  const palette = getGrowthPalette(plant, stage.visualHint);
   const showSprout = stageIndex >= 1;
   const showLeaves = stageIndex >= 2;
   const showFlowers = stageIndex >= 3;
@@ -299,9 +312,15 @@ function GrowthPlantSvg({ stage, plant }: { stage: GrowthStage; plant: PlantDeta
 }
 
 function GrowthSimulator({ plant }: { plant: PlantDetail }) {
-  const [stageIndex, setStageIndex] = useState(2);
-  const stage = growthStages[stageIndex];
-  const progress = stageIndex / (growthStages.length - 1);
+  const stages = plant.growthStages && plant.growthStages.length > 0 ? plant.growthStages : defaultGrowthStages;
+  const [stageIndex, setStageIndex] = useState(Math.min(2, stages.length - 1));
+  const safeStageIndex = Math.min(stageIndex, stages.length - 1);
+  const stage = stages[safeStageIndex];
+  const progress = stages.length > 1 ? safeStageIndex / (stages.length - 1) : 0;
+
+  useEffect(() => {
+    setStageIndex((currentIndex) => Math.min(currentIndex, stages.length - 1));
+  }, [stages.length]);
 
   return (
     <div className="plant-detail-card growth-simulator-card">
@@ -314,9 +333,9 @@ function GrowthSimulator({ plant }: { plant: PlantDetail }) {
       <div className="growth-simulator-stage" aria-live="polite">
         <GrowthPlantSvg stage={stage} plant={plant} />
         <div>
-          <span className="growth-stage-count">Stage {stageIndex + 1} of {growthStages.length}</span>
-          <h3>{stage.label}</h3>
-          <p>{stage.helper}</p>
+          <span className="growth-stage-count">Stage {safeStageIndex + 1} of {stages.length}</span>
+          <h3>{stage.headline}</h3>
+          <p>{stage.description}</p>
           <small>{stage.tip}</small>
         </div>
       </div>
@@ -327,21 +346,21 @@ function GrowthSimulator({ plant }: { plant: PlantDetail }) {
         className="growth-range"
         type="range"
         min="0"
-        max={growthStages.length - 1}
+        max={stages.length - 1}
         step="1"
-        value={stageIndex}
+        value={safeStageIndex}
         aria-valuetext={stage.label}
         onChange={(event) => setStageIndex(Number(event.currentTarget.value))}
       />
 
       <div className="growth-timeline" style={{ '--growth-progress': `${progress * 100}%` } as CSSProperties} aria-label="Choose growth stage">
-        {growthStages.map((item, index) => (
+        {stages.map((item, index) => (
           <button
-            className={index <= stageIndex ? 'growth-stage-dot is-active' : 'growth-stage-dot'}
+            className={index <= safeStageIndex ? 'growth-stage-dot is-active' : 'growth-stage-dot'}
             type="button"
             key={item.id}
             onClick={() => setStageIndex(index)}
-            aria-pressed={index === stageIndex}
+            aria-pressed={index === safeStageIndex}
             aria-label={`Show ${item.label} stage`}
           >
             <span aria-hidden="true">{index + 1}</span>
