@@ -1037,6 +1037,120 @@ dd {
   color: #213d2b;
 }
 
+.month-timeline {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(34px, 1fr));
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 4px 2px 2px;
+  scrollbar-width: thin;
+}
+
+.month-timeline-item {
+  position: relative;
+  display: grid;
+  min-width: 34px;
+  gap: 3px;
+  justify-items: center;
+  padding: 6px 4px 7px;
+  border-radius: 14px;
+  color: #8a9985;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  background: rgba(232, 241, 223, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(91, 119, 75, 0.1);
+}
+
+.month-timeline-dot {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  color: #93a08e;
+  background: rgba(255, 255, 255, 0.68);
+  font-size: 0.7rem;
+}
+
+.month-timeline-item.is-available {
+  color: #284d20;
+  background: linear-gradient(145deg, #e5f7bd, #cfeaa7);
+  box-shadow: inset 0 0 0 1px rgba(90, 143, 47, 0.24), 0 6px 14px rgba(46, 82, 38, 0.08);
+}
+
+.month-timeline-item.is-available .month-timeline-dot {
+  color: #f8ffe9;
+  background: #5a8f2f;
+}
+
+.month-timeline-item.is-current {
+  outline: 2px solid #f4a825;
+  outline-offset: 2px;
+}
+
+.month-timeline-now {
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #fff3bf;
+  color: #7a4a00;
+  font-size: 0.56rem;
+  box-shadow: 0 2px 8px rgba(122, 74, 0, 0.16);
+}
+
+.month-timeline-summary {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  color: #58705f;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.plant-card .month-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  overflow: visible;
+  padding: 4px 0 0;
+}
+
+.plant-card .month-timeline-item {
+  flex: 1 0 calc((100% - 20px) / 6);
+  min-width: 0;
+  padding: 5px 2px 6px;
+  border-radius: 10px;
+  font-size: 0.62rem;
+}
+
+.plant-card .month-timeline-dot {
+  width: 13px;
+  height: 13px;
+  font-size: 0.58rem;
+}
+
+.plant-card .month-timeline-now,
+.plant-card .month-timeline-summary {
+  display: none;
+}
+
+.month-timeline-detail,
+.month-window-label {
+  display: grid;
+  gap: 8px;
+}
+
+.month-window-label {
+  color: #315327;
+  font-weight: 800;
+}
+
 .sun-visual {
   margin-top: 6px;
 }
@@ -1158,6 +1272,17 @@ dd {
   .app-shell {
     width: min(100% - 24px, 1120px);
     padding: 20px 0 36px;
+  }
+
+  .month-timeline {
+    grid-template-columns: repeat(12, minmax(32px, 42px));
+    justify-content: start;
+    padding-top: 10px;
+  }
+
+  .month-timeline-item {
+    min-width: 32px;
+    padding-inline: 3px;
   }
 
   .hero {
@@ -1557,6 +1682,11 @@ dd {
   display: flex;
   gap: 12px;
   align-items: center;
+}
+
+.plant-detail-summary dd.month-timeline-detail {
+  display: grid;
+  align-items: stretch;
 }
 
 .plant-notes-card p,

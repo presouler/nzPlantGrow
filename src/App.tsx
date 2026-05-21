@@ -190,6 +190,43 @@ function WaterDropRating({ watering }: { watering: string }) {
   );
 }
 
+const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+type MonthTimelineProps = {
+  months: number[];
+  currentMonth?: number;
+  label?: string;
+};
+
+function MonthTimeline({ months, currentMonth, label = 'Available planting months' }: MonthTimelineProps) {
+  const availableMonths = new Set(months.filter((month) => month >= 1 && month <= 12));
+  const availableLabel = formatMonthRange(monthLabels.map((_, index) => index + 1).filter((month) => availableMonths.has(month)));
+  const ariaLabel = availableLabel ? `${label}: Available in ${availableLabel}` : `${label}: no available months listed`;
+
+  return (
+    <div className="month-timeline" role="img" aria-label={ariaLabel} title={ariaLabel}>
+      {monthLabels.map((monthLabel, index) => {
+        const monthNumber = index + 1;
+        const isAvailable = availableMonths.has(monthNumber);
+        const isCurrent = currentMonth === monthNumber;
+        const className = [
+          'month-timeline-item',
+          isAvailable ? 'is-available' : 'is-unavailable',
+          isCurrent ? 'is-current' : '',
+        ].filter(Boolean).join(' ');
+
+        return (
+          <span className={className} key={monthLabel} aria-hidden="true">
+            <span className="month-timeline-dot">{isAvailable ? '✓' : '·'}</span>
+            <span className="month-timeline-label">{monthLabel}</span>
+            {isCurrent && <span className="month-timeline-now">Now</span>}
+          </span>
+        );
+      })}
+      {availableLabel && <span className="month-timeline-summary">Available: {availableLabel}</span>}
+    </div>
+  );
+}
 
 const defaultGrowthStages: PlantGrowthStage[] = [
   {
@@ -764,7 +801,7 @@ function getHistoryHomeScrollY(state: unknown): number | null {
   return typeof scrollY === 'number' && Number.isFinite(scrollY) ? scrollY : null;
 }
 
-function PlantCardLink({ plant, onOpen }: { plant: PlantRecommendation; onOpen: (id: string) => void }) {
+function PlantCardLink({ plant, currentMonth, onOpen }: { plant: PlantRecommendation; currentMonth?: number; onOpen: (id: string) => void }) {
   const difficulty = getDifficultyMeta(plant.difficulty);
 
   return (
@@ -792,7 +829,7 @@ function PlantCardLink({ plant, onOpen }: { plant: PlantRecommendation; onOpen: 
           </div>
           <div>
             <dt>Suitable months</dt>
-            <dd>{formatMonthRange(plant.suitableMonths)}</dd>
+            <dd><MonthTimeline months={plant.suitableMonths} currentMonth={currentMonth} /></dd>
           </div>
           <div>
             <dt>Sun</dt>
@@ -810,9 +847,18 @@ function PlantCardLink({ plant, onOpen }: { plant: PlantRecommendation; onOpen: 
   );
 }
 
-function PlantDetailPage({ plant, isLoading, onBack }: { plant: PlantDetail | null; isLoading: boolean; onBack: () => void }) {
+function PlantDetailPage({ plant, currentMonth, isLoading, error, onBack }: { plant: PlantDetail | null; currentMonth?: number; isLoading: boolean; error: string | null; onBack: () => void }) {
   if (isLoading && !plant) {
     return <main className="app-shell loading">Loading plant details…</main>;
+  }
+
+  if (error) {
+    return (
+      <main className="app-shell loading">
+        <button className="back-link" type="button" onClick={onBack}>← Back to recommendations</button>
+        {error}
+      </main>
+    );
   }
 
   if (!plant) {
@@ -856,7 +902,10 @@ function PlantDetailPage({ plant, isLoading, onBack }: { plant: PlantDetail | nu
             </div>
             <div>
               <dt>Best planting months</dt>
-              <dd>{plant.plantingWindowLabel ?? formatMonthRange(plant.suitableMonths)}</dd>
+              <dd className="month-timeline-detail">
+                {plant.plantingWindowLabel && <span className="month-window-label">{plant.plantingWindowLabel}</span>}
+                <MonthTimeline months={plant.suitableMonths} currentMonth={currentMonth} label={`${plant.name} best planting months`} />
+              </dd>
             </div>
             <div>
               <dt>Sun</dt>
@@ -907,17 +956,27 @@ function App() {
   const [route, setRoute] = useState<AppRoute>(() => getRouteFromLocation());
   const [plantDetail, setPlantDetail] = useState<PlantDetail | null>(null);
   const [isPlantDetailLoading, setIsPlantDetailLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
+  const [plantDetailError, setPlantDetailError] = useState<string | null>(null);
   const homeScrollYRef = useRef(0);
   const pendingHomeScrollYRef = useRef<number | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
-    void Promise.all([getCurrentRecommendations(), getAucklandWeather()]).then(([recommendations, weather]) => {
+    void Promise.allSettled([getCurrentRecommendations(), getAucklandWeather()]).then(([recommendationsResult, weatherResult]) => {
       if (!isMounted) return;
 
-      setAucklandWeather(weather);
-      setData(recommendations);
+      if (weatherResult.status === 'fulfilled') {
+        setAucklandWeather(weatherResult.value);
+      }
+
+      if (recommendationsResult.status === 'fulfilled') {
+        setData(recommendationsResult.value);
+        setRecommendationsError(null);
+      } else {
+        setRecommendationsError('Plant recommendations are unavailable right now. Please check that the backend is running, then try again.');
+      }
     });
 
     return () => {
@@ -959,23 +1018,32 @@ function App() {
     if (route.name !== 'plant-detail') {
       setPlantDetail(null);
       setIsPlantDetailLoading(false);
+      setPlantDetailError(null);
       return;
     }
 
     let isMounted = true;
+    setPlantDetail(null);
     setIsPlantDetailLoading(true);
+    setPlantDetailError(null);
 
-    void getPlantDetail(route.id, data?.recommendations).then((plant) => {
+    void getPlantDetail(route.id).then((plant) => {
       if (!isMounted) return;
 
       setPlantDetail(plant);
+      setIsPlantDetailLoading(false);
+    }).catch(() => {
+      if (!isMounted) return;
+
+      setPlantDetail(null);
+      setPlantDetailError('Plant details could not be loaded from the backend. Please go back and try again.');
       setIsPlantDetailLoading(false);
     });
 
     return () => {
       isMounted = false;
     };
-  }, [route, data?.recommendations]);
+  }, [route]);
 
   function navigateToPlant(id: string) {
     const path = plantDetailPath(id);
@@ -997,7 +1065,16 @@ function App() {
   }
 
   if (route.name === 'plant-detail') {
-    return <PlantDetailPage plant={plantDetail} isLoading={isPlantDetailLoading} onBack={navigateToHome} />;
+    return <PlantDetailPage plant={plantDetail} currentMonth={data?.month} isLoading={isPlantDetailLoading} error={plantDetailError} onBack={navigateToHome} />;
+  }
+
+  if (recommendationsError) {
+    return (
+      <main className="app-shell loading">
+        <p>{recommendationsError}</p>
+        <button className="back-link" type="button" onClick={() => window.location.reload()}>Retry</button>
+      </main>
+    );
   }
 
   if (!data) {
@@ -1041,11 +1118,15 @@ function App() {
               <h2 id="recommendations-title">Recommended for {data.season.toLowerCase()}</h2>
             </div>
 
-            <div className="plant-grid">
-              {data.recommendations.map((plant) => (
-                <PlantCardLink plant={plant} onOpen={navigateToPlant} key={plant.id} />
-              ))}
-            </div>
+            {data.recommendations.length > 0 ? (
+              <div className="plant-grid">
+                {data.recommendations.map((plant) => (
+                  <PlantCardLink plant={plant} currentMonth={data.month} onOpen={navigateToPlant} key={plant.id} />
+                ))}
+              </div>
+            ) : (
+              <p>No plant recommendations are available from the backend for this season yet.</p>
+            )}
           </div>
 
           <DifficultyGuide />

@@ -62,8 +62,6 @@ frontend/
       weather.ts
     components/
       PlantIcon.tsx
-    data/
-      mockRecommendations.ts
     utils/
       season.ts
 ```
@@ -80,8 +78,9 @@ Current app uses lightweight browser History API routing (no `react-router` yet)
   - Seasonal recommended plant cards
   - One shared vertical 1-5 star planting difficulty guide
   - Plant cards showing planting difficulty as stars only
+  - Plant cards showing planting availability as a Jan-Dec month timeline, with available months highlighted and the current API month marked when present
   - Clickable recommendation cards that navigate to plant detail pages
-- `/plants/:id` — plant detail screen showing icon, category, difficulty stars, planting months/window label, sun, water, notes, care tips, optional detail sections, and a `Back to recommendations` button.
+- `/plants/:id` — plant detail screen showing icon, category, difficulty stars, planting months/window label plus Jan-Dec availability timeline, sun, water, notes, care tips, optional detail sections, and a `Back to recommendations` button.
 - When opening a detail page from the scrolled recommendation list, the app stores the home scroll position in History state and restores it when returning via the back button or browser Back.
 
 ## Current Components
@@ -93,10 +92,11 @@ Current MVP keeps UI components in `src/App.tsx`:
 - `DifficultyGuide` — renders the shared 1-5 star planting difficulty explanation
 - `HeroWeatherScene` — renders decorative hero background elements for sunny, rainy, cloudy, overcast, sun-shower, and windy states
 - `WaterDropRating` — maps `watering` / backend `water` copy to a compact fixed 5-position water-drop visual while preserving the original guidance in accessibility text and `title`
+- `MonthTimeline` — renders a Jan-Dec planting availability timeline for cards and detail snapshots; available months use active styling/check markers, unavailable months are muted, and `currentMonth` from `/api/recommendations/current` is marked. Card timelines use a compact two-row layout to avoid overflow; detail timelines keep the fuller horizontal timeline and summary.
 - `SunExposureIcon` — renders icon-only sun exposure visual
 - `PlantIcon` (`src/components/PlantIcon.tsx`) — renders inline SVG icons for recommendation cards and detail pages, prioritizing `plant.icon` from backend/API data and using `plant.id`/`plant.name` only as fallback
 - `PlantCardLink` — clickable recommendation card link that pushes `/plants/:id` with History API
-- `PlantDetailPage` — plant detail route UI with fallback-safe content and back navigation
+- `PlantDetailPage` — plant detail route UI with backend error/empty states and back navigation
 - `GrowthSimulator` — interactive detail-page growth timeline. It prefers backend `plant.growthStages` from `GET /api/plants/:id` and falls back to the built-in generic seed-to-mature stages when no backend data is present.
 - `getDifficultyMeta` — maps backend difficulty labels to UI labels, colors, and stars
 - `getSunIconType` — maps backend sun labels to icon variants
@@ -125,9 +125,10 @@ Endpoints:
 
 Frontend behavior:
 
-1. Try to fetch `/api/recommendations/current`.
-2. If backend is unavailable or response is not OK, fall back to local mock data.
-3. Normalize backend fields for UI.
+1. Fetch `/api/recommendations/current`.
+2. If backend is unavailable or response is not OK, show an explicit error state with a retry action; do not render mock plant recommendations.
+3. Normalize backend fields for UI, including preserving `month` from `/api/recommendations/current` as optional `CurrentRecommendationsResponse.month` for current-month timeline markers.
+4. If the backend returns an empty recommendation list, show a clear empty state instead of synthetic plants.
 
 Backend response uses:
 
@@ -135,6 +136,8 @@ Backend response uses:
 plantingMonths: number[];
 water: string;
 icon?: string;
+// on /api/recommendations/current only:
+month: number;
 ```
 
 Frontend UI type uses:
@@ -153,7 +156,7 @@ Plant detail behavior:
 2. Normalize backend `plantingMonths`/`water` to frontend `suitableMonths`/`watering`.
 3. Preserve optional backend `plantingWindowLabel`, `careTips`, `detailSections`, and `growthStages`.
 4. If `growthStages` is present, the detail-page `GrowthSimulator` uses it for stage labels/headlines/descriptions/tips; if absent or invalid, the simulator keeps the built-in default stage fallback.
-5. If the detail endpoint fails, build a non-blank fallback from current recommendations or local mock data; unknown ids get a basic generated detail card.
+5. If the detail endpoint fails, show an explicit error state with a `Back to recommendations` button; do not construct fallback plant details.
 
 ## Types
 
@@ -164,7 +167,7 @@ Defined in `src/types.ts`:
 - `PlantGrowthStage`
 - `GrowthStageId`
 - `ApiPlantRecommendation`
-- `CurrentRecommendationsResponse`
+- `CurrentRecommendationsResponse` (includes optional normalized `month` for current-month UI markers)
 - `ApiCurrentRecommendationsResponse`
 - `WeatherCondition`
 - `TemperatureComfort`
@@ -196,16 +199,9 @@ Difficulty currently accepts backend and frontend labels:
 - `Moderate`
 - `Advanced`
 
-## Mock Data
+## Plant Data Source
 
-Fallback mock data lives in:
-
-- `src/data/mockRecommendations.ts`
-
-Important caveat:
-
-- Mock data is not identical to backend seed data.
-- For production-quality behavior, either generate mock data from backend schema or remove fallback once backend deployment is reliable.
+Backend APIs are the only plant data source. The frontend no longer ships local plant mock data or generates fallback plant recommendations/details. API failures render explicit error states; empty backend recommendation lists render an empty state.
 
 ## Date / Season Helpers
 
@@ -224,7 +220,7 @@ Season mapping:
 - Winter: Jun-Aug
 - Spring: Sep-Nov
 
-Backend is the source of truth for recommendations. Frontend date/season helpers are primarily for fallback mock mode.
+Backend is the source of truth for recommendations. Frontend date/season helpers are used for display formatting, not plant-data fallback.
 
 ## UI / Styling
 
@@ -281,7 +277,7 @@ Each plant card currently renders:
 - Backend/API-provided plant icon variant rendered as an inline SVG, with id/name fallback
 - Plant name
 - Planting difficulty value as 5-star rating only
-- Suitable months text
+- Suitable months Jan-Dec timeline with available months highlighted and current month marked when the recommendations API provides `month`; homepage cards use a compact two-row month grid so Jan-Dec never overflows the card.
 - Sun exposure icon only
 - Watering need as a fixed 5-drop scale, with filled drops indicating the rating and original watering guidance retained in `aria-label` and `title`
 - Plant notes
@@ -315,7 +311,7 @@ Current implementation:
 - `src/components/PlantIcon.tsx` exports reusable inline SVG icons for recommendation cards.
 - Cards pass `plant.icon`, `plant.id`, and `plant.name`; the component uses the backend/API `icon` field first, then falls back to id/name inference only when no recognized icon is provided.
 - Supported backend icon strings include: `broad-beans` / `broad-bean`, `spinach`, `garlic`, `kale`, `parsley`, `lettuce`, `tomato`, `silverbeet`, `coriander`, `kawakawa`, and `default` / `seedling`.
-- Covered current frontend mock and backend seed plants: Broad Beans, Spinach, Garlic, Kale, Parsley, Lettuce, Tomato, Silverbeet, Coriander, Kawakawa.
+- Covered current backend seed plants: Broad Beans, Spinach, Garlic, Kale, Parsley, Lettuce, Tomato, Silverbeet, Coriander, Kawakawa.
 - Unknown or missing icon values fall back to id/name inference, then to a generic seedling icon; add a variant when a backend plant would otherwise repeat the fallback.
 - Styling lives in `src/styles.css` under `.plant-icon`, variant backgrounds, and the high-recognition icon classes near the end of the file.
 - No external image downloads or runtime asset dependencies are required.
@@ -361,7 +357,7 @@ Current implementation:
 
 - Inline SVG in `src/components/PlantIcon.tsx`.
 - `App.tsx` renders `<PlantIcon id={plant.id} icon={plant.icon} name={plant.name} />` in each recommendation card.
-- The backend/API `icon` field is the primary source for icon choice. Name/id mapping remains as a safety fallback and covers current mock/backend-style plants: Broad Bean(s), Spinach, Garlic, Kale, Parsley, Lettuce, Tomato, Silverbeet, Coriander, and Kawakawa, including English and Chinese names where present.
+- The backend/API `icon` field is the primary source for icon choice. Name/id mapping remains as a safety fallback and covers current backend-style plants: Broad Bean(s), Spinach, Garlic, Kale, Parsley, Lettuce, Tomato, Silverbeet, Coriander, and Kawakawa, including English and Chinese names where present.
 - The 2026-05-19 icon refresh prioritizes recognizability: tomato has red fruit + calyx, garlic has a pale segmented bulb, lettuce is a round layered head, kale has a ruffled dark leaf, silverbeet has yellow chard stems, coriander uses finer cut lobes, and kawakawa is a heart-shaped leaf with small holes.
 - Unknown names fall back to a generic seedling icon.
 - Icons are exposed as `role="img"` with an accessible label based on the plant name.
@@ -413,7 +409,7 @@ Both passed. Note: `pnpm run typecheck && pnpm run build` was blocked in this en
 - Initialized React + Vite + TypeScript MVP app.
 - Connected frontend workspace to GitHub repository `presouler/nzPlantGrow`.
 - Added homepage with NZ date, current season, and seasonal plant recommendations.
-- Added local mock recommendation data and fallback API client.
+- Previously added local mock recommendation data and fallback API client; this has now been removed so plant data comes only from backend APIs.
 - Installed pnpm and migrated from `package-lock.json` to `pnpm-lock.yaml`.
 - Fixed API response normalization so backend `plantingMonths`/`water` fields render correctly.
 - Added visible planting difficulty recommendation.
@@ -430,18 +426,22 @@ Both passed. Note: `pnpm run typecheck && pnpm run build` was blocked in this en
 - Added hero weather scene with condition variants, temperature comfort states, weather-driven hero/title background colours, and decorative scene elements for sun, rain, clouds, wind, and leaves.
 - Removed the separate hero weather information card; weather is represented by the title background and scene elements, while temperature remains visible as a compact hero pill.
 - Removed the temporary 20-card weather/title combination preview grid after visual review.
-- Added frontend `icon?: string` support: API normalization preserves backend `icon`, mock recommendations include explicit icon variants, and plant cards pass `plant.icon` to `PlantIcon` before id/name fallback.
+- Added frontend `icon?: string` support: API normalization preserves backend `icon`, and plant cards pass `plant.icon` to `PlantIcon` before id/name fallback.
 - Connected hero weather to `GET /api/weather/auckland` with payload validation, source/update meta text, and season-based fallback that preserves the existing hero weather class contract.
-- Added `/plants/:id` detail pages using browser History API routing, clickable recommendation cards, `GET /api/plants/:id` integration, fallback detail construction, care tips/detail sections rendering, and `Back to recommendations` navigation.
+- Added `/plants/:id` detail pages using browser History API routing, clickable recommendation cards, `GET /api/plants/:id` integration, care tips/detail sections rendering, and `Back to recommendations` navigation.
 - Added manual home scroll restoration so returning from a plant detail page lands back at the previous recommendation-list scroll position instead of the top.
+
+
+- Removed frontend plant mock data (`src/data/mockRecommendations.ts`) and all generated plant-detail fallback behavior; `/api/recommendations/current` and `/api/plants/:id` are now the only plant data sources.
+- Added recommendation API failure UI with retry reload, backend empty-list UI, and detail API failure UI with a back button.
 
 ## Next Recommended Frontend Tasks
 
 1. Split `App.tsx` into reusable components.
 2. Move `SunExposureIcon` into its own component and visually align it with the refreshed plant icon set.
 3. Add bilingual UI labels if desired.
-4. Improve mock/backend data consistency.
-5. Add loading/error states beyond the current simple loading message.
+4. Add frontend tests for backend API contracts and error states.
+5. Add tests for API failure and empty backend recommendation states.
 6. Add tests after component split.
 7. Commit and push initial frontend MVP.
 

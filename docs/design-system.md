@@ -196,8 +196,7 @@ When asking for transparent icons/logos/stickers:
 - `frontend/src/App.tsx` — page and inline UI components
 - `frontend/src/components/PlantIcon.tsx` — plant-specific SVG recommendation icons
 - `frontend/src/styles.css` — global CSS and visual system
-- `frontend/src/api/recommendations.ts` — API normalization/fallback
-- `frontend/src/data/mockRecommendations.ts` — fallback mock data
+- `frontend/src/api/recommendations.ts` — API normalization and request handling; plant data comes from backend APIs only
 - `frontend/src/utils/season.ts` — frontend NZ season helpers
 
 ## Suggested UI Next Steps
@@ -264,6 +263,13 @@ Accessibility requirements:
 - Slider label should include current stage, e.g. `Growth stage: Leafy growth, 3 of 5`.
 - Stage chips need `aria-current="step"` or `aria-pressed` for the active stage.
 - Do not rely on color alone; keep stage labels visible.
+
+Planting month timeline rules:
+
+- Use a Jan-Dec timeline for plant availability instead of comma-separated month text.
+- Available months need both colour and a visible marker (`✓`); unavailable months use muted styling plus `·`.
+- Current month may be marked, but card layouts should not use a bulky label that can overflow.
+- Homepage cards use a compact wrapped two-row month grid; detail pages may use the fuller horizontal timeline and summary text.
 
 Crop-specific illustration rules:
 

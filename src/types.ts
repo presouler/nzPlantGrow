@@ -77,6 +77,7 @@ export type ApiPlantDetail = ApiPlantRecommendation & {
 export type CurrentRecommendationsResponse = {
   date: string;
   season: string;
+  month?: number;
   recommendations: PlantRecommendation[];
 };
 
