@@ -4,8 +4,8 @@ React + Vite frontend for the nzPlant MVP. The app helps New Zealand home garden
 
 ## Project info
 
-1. 个人项目
-2. 线上地址：https://nzplant.kangxinxiong.com
+1. Personal project
+2. Live site: https://nzplant.kangxinxiong.com
 
 ## What it does
 
