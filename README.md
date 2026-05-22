@@ -2,6 +2,11 @@
 
 React + Vite frontend for the nzPlant MVP. The app helps New Zealand home gardeners see what to plant now, with seasonal recommendations, compact plant-care visuals, and a weather-aware hero title.
 
+## Project info
+
+1. 个人项目
+2. 线上地址：https://nzplant.kangxinxiong.com
+
 ## What it does
 
 - Shows today’s NZ date and current New Zealand season.
