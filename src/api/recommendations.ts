@@ -11,6 +11,12 @@ import type {
 const endpoint = '/api/recommendations/current';
 const plantDetailEndpoint = (id: string) => `/api/plants/${encodeURIComponent(id)}`;
 
+function resolveApiUrl(path: string, baseUrl?: string): string {
+  if (!baseUrl) return path;
+
+  return new URL(path, baseUrl).toString();
+}
+
 function normalizeApiPlant(plant: ApiPlantRecommendation): PlantRecommendation {
   return {
     id: plant.id,
@@ -69,8 +75,8 @@ function normalizeApiPlantDetail(plant: ApiPlantDetail): PlantDetail {
   };
 }
 
-export async function getCurrentRecommendations(): Promise<CurrentRecommendationsResponse> {
-  const response = await fetch(endpoint, { headers: { Accept: 'application/json' } });
+export async function getCurrentRecommendations(baseUrl?: string): Promise<CurrentRecommendationsResponse> {
+  const response = await fetch(resolveApiUrl(endpoint, baseUrl), { headers: { Accept: 'application/json' }, cache: 'no-store' });
 
   if (!response.ok) {
     throw new Error(`Recommendations API returned ${response.status}`);
@@ -79,8 +85,8 @@ export async function getCurrentRecommendations(): Promise<CurrentRecommendation
   return normalizeApiResponse((await response.json()) as ApiCurrentRecommendationsResponse);
 }
 
-export async function getPlantDetail(id: string): Promise<PlantDetail> {
-  const response = await fetch(plantDetailEndpoint(id), { headers: { Accept: 'application/json' } });
+export async function getPlantDetail(id: string, baseUrl?: string): Promise<PlantDetail> {
+  const response = await fetch(resolveApiUrl(plantDetailEndpoint(id), baseUrl), { headers: { Accept: 'application/json' }, cache: 'no-store' });
 
   if (!response.ok) {
     throw new Error(`Plant detail API returned ${response.status}`);

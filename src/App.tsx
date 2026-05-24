@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { getCurrentRecommendations, getPlantDetail } from './api/recommendations';
-import { getAucklandWeather } from './api/weather';
 import { PlantIcon } from './components/PlantIcon';
 import type { AucklandWeatherResponse, CurrentRecommendationsResponse, GrowthStageId, HeroWeather, PlantDetail, PlantGrowthStage, PlantRecommendation, WeatherCondition } from './types';
 import { formatMonthRange } from './utils/season';
@@ -772,48 +773,15 @@ function SunExposureIcon({ sun }: { sun: string }) {
 }
 
 
-type AppRoute =
-  | { name: 'home' }
-  | { name: 'plant-detail'; id: string };
-
-type AppHistoryState = {
-  homeScrollY?: number;
-};
-
-function getRouteFromLocation(): AppRoute {
-  const match = window.location.pathname.match(/^\/plants\/([^/]+)\/?$/);
-
-  if (!match) {
-    return { name: 'home' };
-  }
-
-  return { name: 'plant-detail', id: decodeURIComponent(match[1]) };
-}
-
 function plantDetailPath(id: string): string {
   return `/plants/${encodeURIComponent(id)}`;
 }
 
-function getHistoryHomeScrollY(state: unknown): number | null {
-  if (!state || typeof state !== 'object') return null;
-
-  const scrollY = (state as AppHistoryState).homeScrollY;
-  return typeof scrollY === 'number' && Number.isFinite(scrollY) ? scrollY : null;
-}
-
-function PlantCardLink({ plant, currentMonth, onOpen }: { plant: PlantRecommendation; currentMonth?: number; onOpen: (id: string) => void }) {
+function PlantCardLink({ plant, currentMonth }: { plant: PlantRecommendation; currentMonth?: number }) {
   const difficulty = getDifficultyMeta(plant.difficulty);
 
   return (
-    <a
-      className="plant-card plant-card-link"
-      href={plantDetailPath(plant.id)}
-      onClick={(event) => {
-        event.preventDefault();
-        onOpen(plant.id);
-      }}
-      aria-label={`View details for ${plant.name}`}
-    >
+    <Link className="plant-card plant-card-link" href={plantDetailPath(plant.id)} aria-label={`View details for ${plant.name}`}>
       <article>
         <div className="card-topline">
           <span className="category">{plant.category}</span>
@@ -843,40 +811,18 @@ function PlantCardLink({ plant, currentMonth, onOpen }: { plant: PlantRecommenda
         <p>{plant.notes}</p>
         <span className="plant-card-cta">View details →</span>
       </article>
-    </a>
+    </Link>
   );
 }
 
-function PlantDetailPage({ plant, currentMonth, isLoading, error, onBack }: { plant: PlantDetail | null; currentMonth?: number; isLoading: boolean; error: string | null; onBack: () => void }) {
-  if (isLoading && !plant) {
-    return <main className="app-shell loading">Loading plant details…</main>;
-  }
-
-  if (error) {
-    return (
-      <main className="app-shell loading">
-        <button className="back-link" type="button" onClick={onBack}>← Back to recommendations</button>
-        {error}
-      </main>
-    );
-  }
-
-  if (!plant) {
-    return (
-      <main className="app-shell loading">
-        <button className="back-link" type="button" onClick={onBack}>← Back to recommendations</button>
-        Plant details are not available yet.
-      </main>
-    );
-  }
-
+export function PlantDetailPage({ plant, currentMonth }: { plant: PlantDetail; currentMonth?: number }) {
   const difficulty = getDifficultyMeta(plant.difficulty);
   const careTips = plant.careTips?.filter(Boolean) ?? [];
   const detailSections = plant.detailSections?.filter((section) => section.title || section.body || section.items?.length) ?? [];
 
   return (
     <main className="app-shell plant-detail-shell">
-      <button className="back-link" type="button" onClick={onBack}>← Back to recommendations</button>
+      <Link className="back-link" href="/">← Back to recommendations</Link>
 
       <section className="plant-detail-hero" aria-labelledby="plant-detail-title">
         <div className="plant-detail-icon">
@@ -950,137 +896,12 @@ function PlantDetailPage({ plant, currentMonth, isLoading, error, onBack }: { pl
   );
 }
 
-function App() {
-  const [data, setData] = useState<CurrentRecommendationsResponse | null>(null);
-  const [aucklandWeather, setAucklandWeather] = useState<AucklandWeatherResponse | null>(null);
-  const [route, setRoute] = useState<AppRoute>(() => getRouteFromLocation());
-  const [plantDetail, setPlantDetail] = useState<PlantDetail | null>(null);
-  const [isPlantDetailLoading, setIsPlantDetailLoading] = useState(false);
-  const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
-  const [plantDetailError, setPlantDetailError] = useState<string | null>(null);
-  const homeScrollYRef = useRef(0);
-  const pendingHomeScrollYRef = useRef<number | null>(null);
+export type HomePageProps = {
+  data: CurrentRecommendationsResponse;
+  aucklandWeather: AucklandWeatherResponse | null;
+};
 
-  useEffect(() => {
-    let isMounted = true;
-
-    void Promise.allSettled([getCurrentRecommendations(), getAucklandWeather()]).then(([recommendationsResult, weatherResult]) => {
-      if (!isMounted) return;
-
-      if (weatherResult.status === 'fulfilled') {
-        setAucklandWeather(weatherResult.value);
-      }
-
-      if (recommendationsResult.status === 'fulfilled') {
-        setData(recommendationsResult.value);
-        setRecommendationsError(null);
-      } else {
-        setRecommendationsError('Plant recommendations are unavailable right now. Please check that the backend is running, then try again.');
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    const previousScrollRestoration = window.history.scrollRestoration;
-    window.history.scrollRestoration = 'manual';
-
-    const handlePopState = (event: PopStateEvent) => {
-      const nextRoute = getRouteFromLocation();
-
-      if (nextRoute.name === 'home') {
-        pendingHomeScrollYRef.current = getHistoryHomeScrollY(event.state) ?? homeScrollYRef.current;
-      }
-
-      setRoute(nextRoute);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.history.scrollRestoration = previousScrollRestoration;
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (route.name !== 'home' || !data || pendingHomeScrollYRef.current === null) return;
-
-    const scrollY = pendingHomeScrollYRef.current;
-    pendingHomeScrollYRef.current = null;
-    window.requestAnimationFrame(() => window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' }));
-  }, [route, data]);
-
-  useEffect(() => {
-    if (route.name !== 'plant-detail') {
-      setPlantDetail(null);
-      setIsPlantDetailLoading(false);
-      setPlantDetailError(null);
-      return;
-    }
-
-    let isMounted = true;
-    setPlantDetail(null);
-    setIsPlantDetailLoading(true);
-    setPlantDetailError(null);
-
-    void getPlantDetail(route.id).then((plant) => {
-      if (!isMounted) return;
-
-      setPlantDetail(plant);
-      setIsPlantDetailLoading(false);
-    }).catch(() => {
-      if (!isMounted) return;
-
-      setPlantDetail(null);
-      setPlantDetailError('Plant details could not be loaded from the backend. Please go back and try again.');
-      setIsPlantDetailLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [route]);
-
-  function navigateToPlant(id: string) {
-    const path = plantDetailPath(id);
-    const homeScrollY = window.scrollY;
-
-    homeScrollYRef.current = homeScrollY;
-    window.history.replaceState({ ...window.history.state, homeScrollY }, '', window.location.href);
-    window.history.pushState({ homeScrollY }, '', path);
-    setRoute({ name: 'plant-detail', id });
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }
-
-  function navigateToHome() {
-    const homeScrollY = homeScrollYRef.current;
-
-    pendingHomeScrollYRef.current = homeScrollY;
-    window.history.pushState({ homeScrollY }, '', '/');
-    setRoute({ name: 'home' });
-  }
-
-  if (route.name === 'plant-detail') {
-    return <PlantDetailPage plant={plantDetail} currentMonth={data?.month} isLoading={isPlantDetailLoading} error={plantDetailError} onBack={navigateToHome} />;
-  }
-
-  if (recommendationsError) {
-    return (
-      <main className="app-shell loading">
-        <p>{recommendationsError}</p>
-        <button className="back-link" type="button" onClick={() => window.location.reload()}>Retry</button>
-      </main>
-    );
-  }
-
-  if (!data) {
-    return <main className="app-shell loading">Loading seasonal planting ideas…</main>;
-  }
-
+export function HomePage({ data, aucklandWeather }: HomePageProps) {
   const heroWeather = getHeroWeather(data.season, aucklandWeather);
   const hasLiveWeather = aucklandWeather !== null;
 
@@ -1121,7 +942,7 @@ function App() {
             {data.recommendations.length > 0 ? (
               <div className="plant-grid">
                 {data.recommendations.map((plant) => (
-                  <PlantCardLink plant={plant} currentMonth={data.month} onOpen={navigateToPlant} key={plant.id} />
+                  <PlantCardLink plant={plant} currentMonth={data.month} key={plant.id} />
                 ))}
               </div>
             ) : (
@@ -1136,4 +957,4 @@ function App() {
   );
 }
 
-export default App;
+export default HomePage;

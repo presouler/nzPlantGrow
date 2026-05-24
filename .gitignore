@@ -3,6 +3,9 @@ node_modules/
 
 # build output
 dist/
+.next/
+out/
+tsconfig.tsbuildinfo
 
 # local env
 .env

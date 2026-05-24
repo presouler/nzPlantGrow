@@ -5,29 +5,25 @@
 - Git SSH: `git@github.com:presouler/nzPlantGrow.git`
 - Local path: `/Users/leonkang/.openclaw/workspace/nzPlant/frontend`
 - Branch: `main`
-- Repository status at setup: empty repository, no commits yet
-- SSH access: configured and verified through GitHub user `presouler`
 
 ## Stack
 
+- Next.js App Router
 - React
-- Vite
 - TypeScript
 - pnpm 11.1.2
-- Plain global CSS (`src/styles.css`)
+- Plain global CSS imported from `app/globals.css` -> `src/styles.css`
 - No UI framework yet
 
-## Runtime
+## Runtime / Deployment
 
-- Dev server port: `5173`
-- Recommended dev command for exact local URL:
-
-```bash
-pnpm run dev --host 127.0.0.1
-```
-
-- Local URL: `http://127.0.0.1:5173/`
-- Vite dev proxy: `/api` -> `http://localhost:3000`
+- Recommended dev command: `pnpm run dev`
+- Default local URL: `http://127.0.0.1:3000/` (or set `PORT`, e.g. `PORT=5174 pnpm run dev` / `pnpm run start`)
+- Production build/start: `pnpm run build`, then `pnpm run start`
+- Next serves SSR routes directly; deploy by running `next start` (for example under PM2) and proxying web traffic to that Node process.
+- `API_BASE_URL` is server-side only and defaults to `http://127.0.0.1:3000`.
+- Browser-side API calls, if added later, should stay relative to `/api/*`. `next.config.ts` rewrites `/api/:path*` to `${API_BASE_URL}/api/:path*`.
+- Static assets remain in `public/` and keep root-relative URLs. Growth images stay available at `/growth-stages/<plant>/<stage>.png`.
 
 ## Commands
 
@@ -35,80 +31,64 @@ From `/Users/leonkang/.openclaw/workspace/nzPlant/frontend`:
 
 ```bash
 pnpm install
-pnpm run dev --host 127.0.0.1
-pnpm run build
+pnpm run dev
 pnpm run typecheck
+pnpm run build
+pnpm run start
 ```
+
+Current scripts:
+
+- `dev`: `next dev`
+- `typecheck`: `tsc --noEmit`
+- `build`: `next build`
+- `start`: `next start`
 
 ## Project Structure
 
 ```text
 frontend/
-  index.html
-  package.json
-  pnpm-lock.yaml
-  vite.config.ts
-  tsconfig.json
-  tsconfig.app.json
-  tsconfig.node.json
+  app/
+    globals.css
+    layout.tsx
+    page.tsx
+    not-found.tsx
+    plants/[id]/page.tsx
+  public/
+    growth-stages/<plant>/<stage>.png
   src/
     App.tsx
-    main.tsx
     styles.css
     types.ts
-    vite-env.d.ts
     api/
       recommendations.ts
       weather.ts
     components/
+      GrowthStageIcon.tsx
       PlantIcon.tsx
     utils/
       season.ts
+  next.config.ts
+  next-env.d.ts
+  package.json
+  tsconfig.json
 ```
 
 ## Routes / Pages
 
-Current app uses lightweight browser History API routing (no `react-router` yet), with manual scroll restoration between the recommendation list and detail pages:
+- `/` — App Router server page. Fetches current recommendations and Auckland weather on the server using `API_BASE_URL`, then renders the existing visual home UI through `HomePage`.
+- `/plants/[id]` — App Router server page. Fetches `GET /api/plants/:id` on the server using `API_BASE_URL`, then renders the plant detail UI through `PlantDetailPage`. Failed detail fetches call `notFound()` and render `app/not-found.tsx`.
 
-- `/` — home screen showing:
-  - `nzPlant` title and New Zealand planting guide tagline
-  - Today's date formatted in New Zealand locale/time zone
-  - Current New Zealand season
-  - Hero weather title background and temperature pill
-  - Seasonal recommended plant cards
-  - One shared vertical 1-5 star planting difficulty guide
-  - Plant cards showing planting difficulty as stars only
-  - Plant cards showing planting availability as a Jan-Dec month timeline, with available months highlighted and the current API month marked when present
-  - Clickable recommendation cards that navigate to plant detail pages
-- `/plants/:id` — plant detail screen showing icon, category, difficulty stars, planting months/window label plus Jan-Dec availability timeline, sun, water, notes, care tips, optional detail sections, and a `Back to recommendations` button.
-- When opening a detail page from the scrolled recommendation list, the app stores the home scroll position in History state and restores it when returning via the back button or browser Back.
+The previous custom browser History API router was removed. Plant cards use `next/link`, detail route IDs come from App Router `params`, and invalid details use Next `notFound`. No server-rendered path accesses `window`, `document`, `history`, or `localStorage`.
 
-## Current Components
+## Components
 
-Current MVP keeps UI components in `src/App.tsx`:
-
-- `App` — fetches recommendation data and renders the page
-- `StarRating` — renders 5-star difficulty rating
-- `DifficultyGuide` — renders the shared 1-5 star planting difficulty explanation
-- `HeroWeatherScene` — renders decorative hero background elements for sunny, rainy, cloudy, overcast, sun-shower, and windy states
-- `WaterDropRating` — maps `watering` / backend `water` copy to a compact fixed 5-position water-drop visual while preserving the original guidance in accessibility text and `title`
-- `MonthTimeline` — renders a Jan-Dec planting availability timeline for cards and detail snapshots; available months use active styling/check markers, unavailable months are muted, and `currentMonth` from `/api/recommendations/current` is marked. Card timelines use a compact two-row layout to avoid overflow; detail timelines keep the fuller horizontal timeline and summary.
-- `SunExposureIcon` — renders icon-only sun exposure visual
-- `PlantIcon` (`src/components/PlantIcon.tsx`) — renders inline SVG icons for recommendation cards and detail pages, prioritizing `plant.icon` from backend/API data and using `plant.id`/`plant.name` only as fallback
-- `PlantCardLink` — clickable recommendation card link that pushes `/plants/:id` with History API
-- `PlantDetailPage` — plant detail route UI with backend error/empty states and back navigation
-- `GrowthSimulator` — interactive detail-page growth timeline. It prefers backend `plant.growthStages` from `GET /api/plants/:id` and falls back to the built-in generic seed-to-mature stages when no backend data is present.
-- `getDifficultyMeta` — maps backend difficulty labels to UI labels, colors, and stars
-- `getSunIconType` — maps backend sun labels to icon variants
-
-Future split candidates:
-
-- `components/Hero.tsx`
-- `components/PlantCard.tsx`
-- `components/RecommendationsGrid.tsx`
-- `components/StarRating.tsx`
-- `components/SunExposureIcon.tsx`
-- `components/PlantIcon.tsx`
+- `HomePage` (`src/App.tsx`) — presentational home UI for server-fetched recommendation/weather data.
+- `PlantDetailPage` (`src/App.tsx`) — presentational detail UI for server-fetched plant data.
+- `GrowthSimulator` (`src/App.tsx`) — client component interaction using local React state/range controls.
+- `PlantCardLink` (`src/App.tsx`) — uses `next/link` for `/plants/[id]` navigation.
+- `StarRating`, `DifficultyGuide`, `HeroWeatherScene`, `WaterDropRating`, `MonthTimeline`, `SunExposureIcon` remain in `src/App.tsx` for now.
+- `PlantIcon` (`src/components/PlantIcon.tsx`) and `GrowthStageIcon` (`src/components/GrowthStageIcon.tsx`) remain reusable inline SVG components.
 
 ## API Calls
 
@@ -123,375 +103,92 @@ Endpoints:
 - `GET /api/plants/:id`
 - `GET /api/weather/auckland`
 
+Server pages pass `API_BASE_URL` into the API helpers so Node fetches absolute backend URLs. API helper fetches use `cache: 'no-store'`, and App Router pages are marked `dynamic = 'force-dynamic'` so recommendation/weather/detail data is resolved per request instead of baked into the build.
+
 Frontend behavior:
 
-1. Fetch `/api/recommendations/current`.
-2. If backend is unavailable or response is not OK, show an explicit error state with a retry action; do not render mock plant recommendations.
-3. Normalize backend fields for UI, including preserving `month` from `/api/recommendations/current` as optional `CurrentRecommendationsResponse.month` for current-month timeline markers.
-4. If the backend returns an empty recommendation list, show a clear empty state instead of synthetic plants.
+1. Fetch `/api/recommendations/current` on `/`.
+2. Fetch `/api/weather/auckland` on `/`; invalid/unavailable weather returns `null` and the hero falls back to season-based styling without showing a fake temperature pill.
+3. Fetch `/api/plants/:id` on `/plants/[id]`.
+4. API failures render explicit unavailable/not-found UI; the frontend does not ship local mock plant data or generated fallback plant details.
 
-Backend response uses:
-
-```ts
-plantingMonths: number[];
-water: string;
-icon?: string;
-// on /api/recommendations/current only:
-month: number;
-```
-
-Frontend UI type uses:
+Backend response fields still normalize as before:
 
 ```ts
-suitableMonths: number[];
-watering: string;
-icon?: string;
+plantingMonths -> suitableMonths
+water -> watering
+icon -> icon
 ```
-
-The mapping happens inside `normalizeApiResponse` in `src/api/recommendations.ts`. The backend `icon` field is preserved as-is and passed through to plant cards; preserve this unless frontend/backend API contracts are changed together.
-
-Plant detail behavior:
-
-1. On `/plants/:id`, call `GET /api/plants/:id`.
-2. Normalize backend `plantingMonths`/`water` to frontend `suitableMonths`/`watering`.
-3. Preserve optional backend `plantingWindowLabel`, `careTips`, `detailSections`, and `growthStages`.
-4. If `growthStages` is present, the detail-page `GrowthSimulator` uses it for stage labels/headlines/descriptions/tips; if absent or invalid, the simulator keeps the built-in default stage fallback.
-5. If the detail endpoint fails, show an explicit error state with a `Back to recommendations` button; do not construct fallback plant details.
 
 ## Types
 
-Defined in `src/types.ts`:
+Defined in `src/types.ts`, including:
 
-- `PlantDifficulty`
 - `PlantRecommendation`
+- `PlantDetail`
 - `PlantGrowthStage`
-- `GrowthStageId`
-- `ApiPlantRecommendation`
-- `CurrentRecommendationsResponse` (includes optional normalized `month` for current-month UI markers)
-- `ApiCurrentRecommendationsResponse`
-- `WeatherCondition`
-- `TemperatureComfort`
-- `HeroWeather`
+- `CurrentRecommendationsResponse`
 - `AucklandWeatherResponse`
+- weather and difficulty unions
 
+## UI / Styling / Assets
 
-Plant detail `growthStages` contract:
-
-```ts
-growthStages?: Array<{
-  id: 'seed' | 'sprout' | 'leafy' | 'flowering' | 'harvest' | 'mature';
-  label: string;
-  headline: string;
-  description: string;
-  tip: string;
-  visualHint?: string;
-}>;
-```
-
-The frontend normalizer filters invalid/empty `growthStages`. `visualHint` is currently lightweight metadata used only to influence the simulator palette when it matches known hints.
-
-Difficulty currently accepts backend and frontend labels:
-
-- `easy`
-- `medium`
-- `hard`
-- `Easy`
-- `Moderate`
-- `Advanced`
-
-## Plant Data Source
-
-Backend APIs are the only plant data source. The frontend no longer ships local plant mock data or generates fallback plant recommendations/details. API failures render explicit error states; empty backend recommendation lists render an empty state.
-
-## Date / Season Helpers
-
-Frontend helper file:
-
-- `src/utils/season.ts`
-
-Uses timezone:
-
-- `Pacific/Auckland`
-
-Season mapping:
-
-- Summer: Dec-Feb
-- Autumn: Mar-May
-- Winter: Jun-Aug
-- Spring: Sep-Nov
-
-Backend is the source of truth for recommendations. Frontend date/season helpers are used for display formatting, not plant-data fallback.
-
-## UI / Styling
-
-Styles live in:
-
-- `src/styles.css`
-
-Current visual direction:
-
-- Garden-themed green/yellow palette
-- Large rounded hero panel
-- Responsive card grid
-- Soft shadows
-- Pill labels
-- Inline SVG icons for sun exposure and hero weather
-
-See also:
-
-- `/Users/leonkang/.openclaw/workspace/nzPlant/docs/design-system.md`
-
-
-## Hero Weather UI
-
-The hero includes weather-driven title/background styling in `src/App.tsx`:
-
-- Weather conditions: `cloudy`, `overcast`, `sunny`, `rainy`, `sun-shower`, `windy`
-- Temperature comfort states: `cold`, `suitable`, `hot`, `very-hot`
-- Each state combination gets variant classes on the hero section:
-  - `.hero-weather-cloudy`, `.hero-weather-overcast`, `.hero-weather-sunny`, `.hero-weather-rainy`, `.hero-weather-sun-shower`, `.hero-weather-windy`
-  - `.hero-temp-cold`, `.hero-temp-suitable`, `.hero-temp-hot`, `.hero-temp-very-hot`
-- The hero/title background color changes by weather condition using CSS variables (`--hero-weather-background`, `--hero-weather-glow`, `--hero-weather-shadow`).
-- The hero also renders decorative background weather scene elements:
-  - Sunny / sun-shower: large sun
-  - Rainy / sun-shower: rain drops
-  - Cloudy / overcast / rainy / sun-shower: cloud layers
-  - Windy: wind streaks and falling leaves
-- UI displays weather through the hero/title background and decorative scene elements; there is no separate weather information card.
-- The title facts row shows today’s temperature as a compact pill only when live Auckland weather is available, so refresh/fallback states do not show the old mock `18°C` value.
-- When real weather loads, a small meta line under the facts row shows Auckland location/source/update time; there is still no separate weather information card.
-- Decorative scene elements sit behind the title/date/season/temperature content and are hidden from assistive tech.
-
-Current data source:
-
-- `src/api/weather.ts` fetches `GET /api/weather/auckland`, expecting `location`, `temperatureCelsius`, `condition`, `comfort`, `observedAt`, and `source`.
-- `App` requests recommendations and Auckland weather together on initial page load, then renders the hero once the weather request has settled. This prevents a refresh-time flash of the old season-based mock temperature before real Auckland weather arrives.
-- `getHeroWeather(season, weather)` prefers the validated API weather and falls back to local season-based hero weather only when the endpoint fails or returns an unsupported payload; fallback weather can still drive background styling, but the visible temperature pill is hidden unless live weather exists.
-- Keep the `HeroWeather` condition/comfort/temperature shape and hero variant class contract stable unless frontend/backend API contracts are changed together.
-
-## Plant Card Display Contract
-
-Each plant card currently renders:
-
-- Category pill
-- Backend/API-provided plant icon variant rendered as an inline SVG, with id/name fallback
-- Plant name
-- Planting difficulty value as 5-star rating only
-- Suitable months Jan-Dec timeline with available months highlighted and current month marked when the recommendations API provides `month`; homepage cards use a compact two-row month grid so Jan-Dec never overflows the card.
-- Sun exposure icon only
-- Watering need as a fixed 5-drop scale, with filled drops indicating the rating and original watering guidance retained in `aria-label` and `title`
-- Plant notes
-
-## Watering UI
-
-User requirement:
-
-- Plant cards should not show long watering text directly.
-- Show watering as a fixed 5-drop scale, like the star difficulty display: e.g. 3/5 renders 5 droplet positions with 3 filled and 2 pale/unfilled.
-- Keep the original watering text available to assistive tech / hover title.
-- Do not introduce external image dependencies.
-
-Current implementation:
-
-- `WaterDropRating` lives in `src/App.tsx` and renders five inline SVG droplets for every plant.
-- Accessibility label format: `Watering need 3 out of 5 drops: <original watering text>`.
-- Mapping is derived from the normalized `plant.watering` string, including backend `water` values after API normalization:
-  - low / after planting / reduce / lightly / establishing -> 2 drops
-  - minimal / dry / drought / sparingly -> 1 drop
-  - regular / consistent / evenly / moderate / moist / shallow -> 3 drops
-  - deep / deeply / weekly / base -> 4 drops
-  - high / heavy / frequent / needs more water / very moist -> 5 drops
-  - unknown fallback -> 3 drops
-- Droplet styling is in `src/styles.css` under `.water-visual`, `.water-rating`, and `.water-drop`.
-
-## Plant Icons
-
-Current implementation:
-
-- `src/components/PlantIcon.tsx` exports reusable inline SVG icons for recommendation cards.
-- Cards pass `plant.icon`, `plant.id`, and `plant.name`; the component uses the backend/API `icon` field first, then falls back to id/name inference only when no recognized icon is provided.
-- Supported backend icon strings include: `broad-beans` / `broad-bean`, `spinach`, `garlic`, `kale`, `parsley`, `lettuce`, `tomato`, `silverbeet`, `coriander`, `kawakawa`, and `default` / `seedling`.
-- Covered current backend seed plants: Broad Beans, Spinach, Garlic, Kale, Parsley, Lettuce, Tomato, Silverbeet, Coriander, Kawakawa.
-- Unknown or missing icon values fall back to id/name inference, then to a generic seedling icon; add a variant when a backend plant would otherwise repeat the fallback.
-- Styling lives in `src/styles.css` under `.plant-icon`, variant backgrounds, and the high-recognition icon classes near the end of the file.
-- No external image downloads or runtime asset dependencies are required.
-
-Design intent:
-
-- Lightweight 64x64 viewBox SVGs that remain legible at card-header size.
-- Recognizable silhouettes over abstract leaf marks: tomato fruit/calyx, garlic bulb/cloves/shoots, bean pod with beans, lettuce head, chard yellow rib, kawakawa heart leaf/dots, and distinct herb/kale/spinach leaf forms.
-- Consistent rounded tile, green/yellow garden theme, simple filled botanical shapes.
-- Icon labels are available through `role="img"` / `aria-label`; inner SVGs are hidden from assistive tech.
-
-## Sun Exposure Icons
-
-User requirement:
-
-- Do not show visible raw text like `full sun`, `part shade`, `part sun`.
-- Use image/icon instead.
-
-Current implementation:
-
-- Inline SVG in `SunExposureIcon`
-- `full sun` -> centered sun icon
-- `part sun` / `part shade` -> sun + cloud icon
-- `shade` -> leaf/shade icon
-
-Accessibility:
-
-- Icon has `aria-label="Sun requirement: ..."`
-- SVG itself is `aria-hidden`
-
-Known fix:
-
-- Full sun icon was off-center and was fixed by moving SVG sun center to `(32, 32)`.
-
-## Plant Icons
-
-User requirement:
-
-- Each recommendation card should show an icon corresponding to `plant.name`.
-- Do not introduce external image dependencies.
-
-Current implementation:
-
-- Inline SVG in `src/components/PlantIcon.tsx`.
-- `App.tsx` renders `<PlantIcon id={plant.id} icon={plant.icon} name={plant.name} />` in each recommendation card.
-- The backend/API `icon` field is the primary source for icon choice. Name/id mapping remains as a safety fallback and covers current backend-style plants: Broad Bean(s), Spinach, Garlic, Kale, Parsley, Lettuce, Tomato, Silverbeet, Coriander, and Kawakawa, including English and Chinese names where present.
-- The 2026-05-19 icon refresh prioritizes recognizability: tomato has red fruit + calyx, garlic has a pale segmented bulb, lettuce is a round layered head, kale has a ruffled dark leaf, silverbeet has yellow chard stems, coriander uses finer cut lobes, and kawakawa is a heart-shaped leaf with small holes.
-- Unknown names fall back to a generic seedling icon.
-- Icons are exposed as `role="img"` with an accessible label based on the plant name.
-
-## Difficulty UI
-
-User requirement:
-
-- Difficulty should be shown with 5 stars.
-- Show one shared compact explanation for 1-star through 5-star difficulty as a right-side helper on desktop.
-- Plant card difficulty rows should show stars only to keep cards compact.
-
-Current mapping:
-
-- `easy` = 1/5
-- `medium` / `moderate` = 3/5
-- `hard` / `advanced` = 5/5
-- unknown fallback = 3/5
-
-Current internal labels for accessibility:
-
-- `1/5 Easy / beginner friendly`
-- `3/5 Medium / regular care needed`
-- `5/5 Hard / experienced gardeners`
-
-Current shared guide layout/copy:
-
-- Desktop: compact `Difficulty guide` aside on the right of the recommendation grid; sticky while scrolling.
-- Narrow screens: guide stacks with the recommendations content.
-- 1 star: Beginner friendly.
-- 2 stars: Easy, occasional checks.
-- 3 stars: Moderate regular care.
-- 4 stars: Challenging conditions.
-- 5 stars: Advanced growers.
+- Global styles live in `src/styles.css` and are imported once by `app/globals.css`.
+- Existing garden-themed visuals, plant icons, weather hero classes, star difficulty UI, sun icons, water-drop rating, month timeline, and growth simulator styles are preserved.
+- Raster growth assets remain under `public/growth-stages/` and are referenced with root-relative paths, which matches Next public directory rules.
+- Current raster-backed plants: `tomato`, `lettuce`, `broad-bean`, `silverbeet`, `coriander`, `parsley`, `kawakawa`, and `spinach`.
 
 ## Validation Status
 
-Last verified after plant detail page implementation:
+Last verified after Next.js App Router migration QA:
 
 ```bash
-./node_modules/.bin/tsc -b --noEmit
-./node_modules/.bin/vite build
+pnpm run typecheck && pnpm run build
+# blocked locally by pnpm ignored-build-script approval gate before scripts ran
+
+./node_modules/.bin/tsc --noEmit
+./node_modules/.bin/next build
+PORT=3000 HOST=127.0.0.1 node ../backend/dist/server.js
+PORT=5174 API_BASE_URL=http://127.0.0.1:3000 ./node_modules/.bin/next start
+# smoke checked /, /plants/tomato, and /growth-stages/tomato/leafy.png return 200
 ```
 
-Both passed. Note: `pnpm run typecheck && pnpm run build` was blocked in this environment by pnpm ignored-build-script approval (`pnpm approve-builds` required for unrelated dependencies), so validation used the local project binaries directly.
+`pnpm run typecheck` / `pnpm run build` are currently blocked by the local pnpm ignored-build-script approval gate (`pnpm approve-builds` required). Direct local binaries passed. Production `next start` smoke was verified against the backend on port 3000 and frontend on port 5174.
 
 ## Recent Important Changes
 
-- Initialized React + Vite + TypeScript MVP app.
-- Connected frontend workspace to GitHub repository `presouler/nzPlantGrow`.
-- Added homepage with NZ date, current season, and seasonal plant recommendations.
-- Previously added local mock recommendation data and fallback API client; this has now been removed so plant data comes only from backend APIs.
-- Installed pnpm and migrated from `package-lock.json` to `pnpm-lock.yaml`.
-- Fixed API response normalization so backend `plantingMonths`/`water` fields render correctly.
-- Added visible planting difficulty recommendation.
-- Changed planting difficulty display to a five-star rating.
-- Replaced visible sun requirement text with SVG icon-only visuals.
-- Replaced visible watering guidance text on cards with compact 1-5 inline SVG water-drop ratings while preserving the original watering guidance for accessibility and hover titles.
-- Changed difficulty UI to one shared 1-5 star explanation and simplified cards to show planting difficulty.
-- Fixed full sun icon alignment.
-- Reverted plant card difficulty rows to stars only and changed shared planting difficulty guide to a vertical list.
-- Moved the shared difficulty guide from a large full-width block into a compact right-side helper aside on desktop.
-- Added plant-name-specific inline SVG icons to recommendation cards without external image dependencies.
-- Refreshed Broad Bean(s), Spinach, Garlic, Kale, Parsley, Lettuce, Tomato, Silverbeet, Coriander, and Kawakawa icons for clearer crop recognition while keeping inline 64x64 SVGs and the existing garden theme.
-- Removed Chinese UI and mock-data copy for the initial English-only version.
-- Added hero weather scene with condition variants, temperature comfort states, weather-driven hero/title background colours, and decorative scene elements for sun, rain, clouds, wind, and leaves.
-- Removed the separate hero weather information card; weather is represented by the title background and scene elements, while temperature remains visible as a compact hero pill.
-- Removed the temporary 20-card weather/title combination preview grid after visual review.
-- Added frontend `icon?: string` support: API normalization preserves backend `icon`, and plant cards pass `plant.icon` to `PlantIcon` before id/name fallback.
-- Connected hero weather to `GET /api/weather/auckland` with payload validation, source/update meta text, and season-based fallback that preserves the existing hero weather class contract.
-- Added `/plants/:id` detail pages using browser History API routing, clickable recommendation cards, `GET /api/plants/:id` integration, care tips/detail sections rendering, and `Back to recommendations` navigation.
-- Added manual home scroll restoration so returning from a plant detail page lands back at the previous recommendation-list scroll position instead of the top.
-
-
-- Removed frontend plant mock data (`src/data/mockRecommendations.ts`) and all generated plant-detail fallback behavior; `/api/recommendations/current` and `/api/plants/:id` are now the only plant data sources.
-- Added recommendation API failure UI with retry reload, backend empty-list UI, and detail API failure UI with a back button.
+- Migrated from the temporary Vite SSR implementation to Next.js App Router.
+- Removed the Vite runtime path: `server.mjs`, `vite.config.ts`, `index.html`, `src/entry-client.tsx`, `src/entry-server.tsx`, `src/main.tsx`, and `src/vite-env.d.ts`.
+- Replaced custom History API routing with App Router pages, `next/link`, route `params`, and `notFound()`.
+- Changed `package.json` scripts/dependencies from Vite to Next.
+- Added `app/layout.tsx`, `app/page.tsx`, `app/plants/[id]/page.tsx`, `app/not-found.tsx`, `app/globals.css`, `next.config.ts`, and `next-env.d.ts`.
+- Kept the existing visual design and static growth-stage assets accessible.
 
 ## Next Recommended Frontend Tasks
 
-1. Split `App.tsx` into reusable components.
-2. Move `SunExposureIcon` into its own component and visually align it with the refreshed plant icon set.
-3. Add bilingual UI labels if desired.
-4. Add frontend tests for backend API contracts and error states.
-5. Add tests for API failure and empty backend recommendation states.
-6. Add tests after component split.
-7. Commit and push initial frontend MVP.
+1. Split `src/App.tsx` into smaller focused components now that routing is handled by App Router.
+2. Add frontend tests for API error/empty states and detail not-found behavior.
+3. Update nginx/PM2 deployment config to proxy to `next start` instead of serving `dist`.
 
-## Plant Detail Growth Simulator
+## Local Production Deployment Update — 2026-05-24
 
-The `/plants/:id` detail screen includes an interactive `GrowthSimulator` card in `src/App.tsx`.
+The local production deployment has been updated from static Vite `dist` hosting to a Next.js Node server behind nginx.
 
-Current behavior:
+Runtime process:
 
-- Users can drag a keyboard-accessible range slider to preview plant growth.
-- Users can also click stage buttons along the timeline.
-- The current stage updates live with matching artwork, stage label, helper copy, and care tip.
-- The simulator covers six stages: `seed`, `sprout`, `leafy`, `flowering`, `harvest`, and `mature`.
-- Primary recommended crops use generated raster PNG stage assets from `public/growth-stages/<plant>/<stage>.png` for stronger recognition at card size.
-- Remaining unsupported/fallback crops can still render with the inline SVG fallback.
-- The module is local to the detail page and does not change History API navigation or the existing home scroll restoration behavior.
+- LaunchAgent plist: `~/Library/LaunchAgents/com.nzplant.frontend.plist`
+- Source copy: `../deploy/nzplant.next.frontend.plist`
+- Working directory: `/Users/leonkang/.openclaw/workspace/nzPlant/frontend`
+- Command: `next start -H 127.0.0.1`
+- Env: `NODE_ENV=production`, `PORT=3001`, `API_BASE_URL=http://127.0.0.1:3000`
+- Logs: `../logs/frontend-next.out.log`, `../logs/frontend-next.err.log`
 
-Supporting design asset:
+nginx:
 
-- `src/components/GrowthStageIcon.tsx`
-  - Exports `GrowthStageIcon`
-  - Provides a smaller rounded-tile stage icon set for future reuse in chips, summaries, or onboarding
-  - Supported stages: `seed`, `sprout`, `leafy`, `flowering`, `harvest`
-  - Inline SVG only; no external image dependency
-  - Matches the existing rounded garden-themed `PlantIcon` visual language
+- Active config: `/opt/homebrew/etc/nginx/servers/nzplant.conf`
+- Source copy: `../deploy/nzplant.nginx.next.conf`
+- `/api/` proxies to backend `http://127.0.0.1:3000`
+- `/_next/static/`, static assets, and all page routes proxy to frontend `http://127.0.0.1:3001`
+- Old static `root frontend/dist` + `try_files /index.html` deployment has been removed.
 
-Key CSS areas in `src/styles.css`:
-
-- `.growth-simulator-card`, `.growth-simulator-stage`, `.growth-range`, `.growth-timeline`, `.growth-stage-dot`
-- `.growth-plant-image`, `.growth-plant-svg`, `.growth-palette-*`, `.growth-soil`, `.growth-stem`, `.growth-leaf`, `.growth-flowers`, `.growth-harvest`
-- `.growth-stage-icon*` for the supporting reusable icon set
-
-### Growth simulator realism update
-
-- The selected growth stage displays backend `timeLabel` when available, so the simulator reflects crop-specific timing rather than only generic stage numbers.
-- Stage artwork is crop-aware: harvest/mature visuals use produce only when that plant actually has that produce. Example: spinach mature/harvest assets must never show tomato-like red fruit.
-- Frontend accepts optional `startDay`/`endDay` for future proportional timelines, while the current UI keeps equal stage stops for simple dragging.
-- If backend timing data is absent or invalid, the simulator still falls back to generic seed-to-mature copy.
-
-### Growth simulator raster asset strategy
-
-- `GrowthSimulator` resolves a crop palette from `plant.growthStages[].visualHint`, `plant.icon`, `plant.id`, and `plant.name`.
-- Raster-backed plants are defined in `rasterGrowthPlants` and rendered by `RasterGrowthImage`.
-- Current raster-backed plants: `tomato`, `lettuce`, `broad-bean`, `silverbeet`, `coriander`, `parsley`, `kawakawa`, and `spinach`.
-- Each raster-backed plant must provide six canonical files:
-  - `public/growth-stages/<plant>/seed.png`
-  - `public/growth-stages/<plant>/sprout.png`
-  - `public/growth-stages/<plant>/leafy.png`
-  - `public/growth-stages/<plant>/flowering.png`
-  - `public/growth-stages/<plant>/harvest.png`
-  - `public/growth-stages/<plant>/mature.png`
-- Keep image prompts/selection focused on real plant morphology, not decorative colour. If SVG is not recognisable enough at card size, prefer staged raster assets before spending more time on path details.
-- Remaining palettes such as `kale`, `garlic`, and `default` keep the SVG fallback until dedicated assets are added.
+Deployment smoke was verified for `/`, `/plants/tomato`, `/api/recommendations/current`, and `/growth-stages/tomato/leafy.png`.

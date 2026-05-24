@@ -2,6 +2,12 @@ import type { AucklandWeatherResponse, WeatherCondition, TemperatureComfort } fr
 
 const endpoint = '/api/weather/auckland';
 
+function resolveApiUrl(path: string, baseUrl?: string): string {
+  if (!baseUrl) return path;
+
+  return new URL(path, baseUrl).toString();
+}
+
 const weatherConditions = new Set<WeatherCondition>([
   'cloudy',
   'overcast',
@@ -30,9 +36,9 @@ function isAucklandWeatherResponse(value: unknown): value is AucklandWeatherResp
   );
 }
 
-export async function getAucklandWeather(): Promise<AucklandWeatherResponse | null> {
+export async function getAucklandWeather(baseUrl?: string): Promise<AucklandWeatherResponse | null> {
   try {
-    const response = await fetch(endpoint, { headers: { Accept: 'application/json' } });
+    const response = await fetch(resolveApiUrl(endpoint, baseUrl), { headers: { Accept: 'application/json' }, cache: 'no-store' });
 
     if (!response.ok) {
       throw new Error(`Auckland weather API returned ${response.status}`);
